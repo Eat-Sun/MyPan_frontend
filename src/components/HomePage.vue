@@ -119,7 +119,7 @@ export default {
   setup() {
     const route = useRoute()
     const dataInFolderData = ref([])
-    const consumer = createConsumer('ws://localhost:3000/cable')
+    const consumer = createConsumer('/cable')
     const activeIndex = ref('1')
     const uploadListVisible = ref(false)
     const uploadList = ref([])
