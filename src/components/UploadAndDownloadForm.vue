@@ -259,7 +259,7 @@ export default {
 
     // 下载文件
     const downloadFile = () => {
-      axios.get('http://localhost:3000/api/v1/attachments/downloader', {
+      axios.get('/api/v1/attachments/downloader', {
         params: {
           b2_keys: get_b2_keys()
         }

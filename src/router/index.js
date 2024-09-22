@@ -4,29 +4,31 @@ import HomePage from '../components/HomePage.vue'
 import axios from 'axios'
 // import { useRouter } from 'vue-router';
 
-
 const routes = [
-  { path: '/', name: 'LoginForm', component: LoginForm },
-  { path: '/homepage',
+  { path: '/', redirect: '/login' }, // 默认路由重定向到 /login
+  { path: '/login', name: 'LoginForm', component: LoginForm },
+  {
+    path: '/homepage',
     name: 'HomePage',
     component: HomePage,
-    beforeEnter(to, from, next){
-      axios.get('http://localhost:3000/api/v1/attachments/getter', {
-        params: {
-          token: localStorage.getItem('token')
-        }
-      }).then(response => {
-        let code = response.data.code
+    beforeEnter(to, from, next) {
+      axios
+        .get('/api/v1/attachments/getter', {
+          params: {
+            token: localStorage.getItem('token')
+          }
+        })
+        .then((response) => {
+          let code = response.data.code
 
-        if(code == 1){
-          to.query.folder_data = JSON.stringify(response.data.data)
+          if (code == 1) {
+            to.query.folder_data = JSON.stringify(response.data.data)
 
-          next()
-        }else{
-
-          next({ name: 'LoginForm' })
-        }
-      })
+            next()
+          } else {
+            next({ name: 'LoginForm' })
+          }
+        })
     }
   }
 ]
@@ -60,7 +62,7 @@ const router = createRouter({
 
 //   if (token) {
 //     try {
-//       const response = await axios.post('http://localhost:3000/api/v1/sessions/create', {
+//       const response = await axios.post('/api/v1/sessions/create', {
 //         user: null,
 //         token: token
 //       })

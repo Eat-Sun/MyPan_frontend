@@ -6,12 +6,7 @@
       </el-icon>
       删除文件
     </el-button>
-    <el-button
-      v-show="showOperationButton"
-      type="primary"
-      plain
-      @click="visibleMoveFileTable = true"
-    >
+    <el-button v-show="showOperationButton" type="primary" plain @click="visibleMoveFileTable = true">
       <el-icon>
         <Delete />
       </el-icon>
@@ -29,17 +24,19 @@
       <el-table-column>
         <template v-slot="scope">
           <div>
-            <el-icon style="margin-right: 15px"><Folder /></el-icon> {{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Folder />
+            </el-icon> {{ scope.row.name }}
           </div>
         </template>
       </el-table-column>
     </el-table>
     <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="visibleMoveFileTable = false">取消</el-button>
-          <el-button type="primary" @click="moveSelected">移动到此文件夹</el-button>
-        </span>
-      </template>
+      <span class="dialog-footer">
+        <el-button @click="visibleMoveFileTable = false">取消</el-button>
+        <el-button type="primary" @click="moveSelected">移动到此文件夹</el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 <script>
@@ -49,7 +46,7 @@ import { ElMessage } from 'element-plus';
 
 export default {
   name: "OperateForm",
-  emits:['deleteFrom_dataInFolderData'],
+  emits: ['deleteFrom_dataInFolderData'],
   props: {
     currentPath: {
       type: Array,
@@ -79,12 +76,12 @@ export default {
     const navigateTo = (index) => {
       breadcrumb.value = breadcrumb.value.slice(0, index + 1)
       currentData.value = breadcrumb.value[index].data
-      console.log("breadcrumb.value:",breadcrumb.value)
+      console.log("breadcrumb.value:", breadcrumb.value)
     }
 
     const handleRowClick = (row) => {
       if (row.name != 'root') {
-        breadcrumb.value.push({ id: row.id ,name: row.name, data: row.children })
+        breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
       }
       currentData.value = row.children
     }
@@ -100,13 +97,13 @@ export default {
 
     const deleteSelected = () => {
       // emit('deleteFrom_dataInFolderData')
-      axios.post('http://localhost:3000/api/v1/attachments/deleter', {
+      axios.post('/api/v1/attachments/deleter', {
         token: localStorage.getItem('token'),
         data: props.selectedData
       }).then(response => {
         const code = response.data.code;
         console.log("code:", code)
-        if(code == 1){
+        if (code == 1) {
           emit('deleteFrom_dataInFolderData')
 
           ElMessage({
@@ -114,7 +111,7 @@ export default {
             type: 'success',
             plain: true,
           })
-        }else if(code == -1){
+        } else if (code == -1) {
           ElMessage({
             message: '删除失败',
             type: 'error',
@@ -122,7 +119,7 @@ export default {
           })
         }
       }).catch(error => {
-        console.error('发生错误：',error)
+        console.error('发生错误：', error)
       });
     }
 
@@ -133,7 +130,7 @@ export default {
       });
       let targetMenuId = breadcrumb.value[breadcrumb.value.length - 1].id;
 
-      axios.post('http://localhost:3000/api/v1/attachments/mover', {
+      axios.post('/api/v1/attachments/mover', {
         token: localStorage.getItem('token'),
         data: {
           filelist: files,
@@ -141,7 +138,7 @@ export default {
         }
       }).then(response => {
         const code = response.data.code;
-        if(code == 1){
+        if (code == 1) {
           updateRootData(data, currentPath.value, breadcrumb.value, props.selectedData)
           // console.log("data:",data)
           // console.log("props.data:",props.data)
@@ -150,7 +147,7 @@ export default {
             type: 'success',
             plain: true,
           })
-        }else{
+        } else {
           ElMessage({
             message: '移动失败',
             type: 'error',
@@ -158,9 +155,9 @@ export default {
           })
         }
       })
-      .catch(error => {
-        console.error('发生错误：',error)
-      });
+        .catch(error => {
+          console.error('发生错误：', error)
+        });
       visibleMoveFileTable.value = false
     }
 
@@ -171,13 +168,13 @@ export default {
       // console.log("breadcrumb:",breadcrumb)
       // console.log("selectedData:",selectedData)
       //在原始数据中寻找删除文件的路径
-      if(currentPath.length > 0){
+      if (currentPath.length > 0) {
         data.forEach(item => {
-          if(item.type == 'folder' && item.id == currentPath[0]?.id){
+          if (item.type == 'folder' && item.id == currentPath[0]?.id) {
             updateRootData(item.children, currentPath.slice(1), breadcrumb, selectedData)
           }
         })
-      }else{
+      } else {
         //找到了删除文件的路径
         for (let i = data.length - 1; i >= 0; i--) {
           if (selectedData.includes(data[i])) {
@@ -186,13 +183,13 @@ export default {
         }
       }
       //在原始数据中寻找添加文件的路径
-      if(breadcrumb.length > 0){
+      if (breadcrumb.length > 0) {
         data.forEach(item => {
-          if(item.type == 'folder' && item.id == breadcrumb[0]?.id){
+          if (item.type == 'folder' && item.id == breadcrumb[0]?.id) {
             updateRootData(item.children, currentPath, breadcrumb.slice(1), selectedData)
           }
         });
-      }else{
+      } else {
         //找到了添加文件的路径
         data.push(...selectedData)
       }

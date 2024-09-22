@@ -12,27 +12,47 @@
       <el-table-column prop="name" label="Name" sortable>
         <template v-slot="scope">
           <div v-if="scope.row.type == 'folder'">
-            <el-icon style="margin-right: 15px"><Folder /></el-icon> {{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Folder />
+            </el-icon>
+            {{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'picture'">
-            <el-icon style="margin-right: 15px"> <Picture /> </el-icon> {{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Picture />
+            </el-icon>
+            {{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'word'">
-            <el-icon style="margin-right: 15px"><Document /></el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Document />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'video'">
-            <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <VideoCamera />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'audio'">
-            <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Headset />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else>
-            <el-icon style="margin-right: 15px"><More /></el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <More />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-if="'editing' in scope.row && scope.row.editing">
             <el-input v-model="scope.row.name" style="width: 120px; margin-right: 15px" placeholder="文件夹名称" clearable />
-            <el-button type="danger" circle @click="currentData.splice(scope.$index, 1)"><el-icon><Delete /></el-icon></el-button>
-            <el-button type="primary" circle @click="createFolder(scope.row)"><el-icon><Select /></el-icon></el-button>
+            <el-button type="danger" circle @click="currentData.splice(scope.$index, 1); $event.stopPropagation()">
+              <el-icon>
+                <Delete />
+              </el-icon>
+            </el-button>
+            <el-button type="primary" circle @click="createFolder($event, scope.row)">
+              <el-icon><Select /></el-icon>
+            </el-button>
           </div>
         </template>
       </el-table-column>
@@ -40,10 +60,14 @@
       <el-table-column prop="size" label="Size" sortable>
         <template v-slot="scope">
           <div v-if="scope.row.type != 'folder'">
-            <div v-if="scope.row.size < 1024">{{ scope.row.size+'Byte' }}</div>
-            <div v-else-if="scope.row.size > 1024 && scope.row.size < 1048576">{{ (scope.row.size / 1024).toFixed(2) + ' KB' }}</div>
-            <div v-else-if="scope.row.size > 1048576 && scope.row.size < 1073741824">{{ (scope.row.size / 1048576.0).toFixed(2) +'MB' }}</div>
-            <div v-else>{{ (scope.row.size / 1073741824.0).toFixed(2) +'GB' }}</div>
+            <div v-if="scope.row.size < 1024">{{ scope.row.size + 'Byte' }}</div>
+            <div v-else-if="scope.row.size > 1024 && scope.row.size < 1048576">
+              {{ (scope.row.size / 1024).toFixed(2) + 'KB' }}
+            </div>
+            <div v-else-if="scope.row.size > 1048576 && scope.row.size < 1073741824">
+              {{ (scope.row.size / 1048576.0).toFixed(2) + 'MB' }}
+            </div>
+            <div v-else>{{ (scope.row.size / 1073741824.0).toFixed(2) + 'GB' }}</div>
           </div>
         </template>
       </el-table-column>
@@ -66,7 +90,7 @@ export default {
     }
   },
   setup(props, { emit }) {
-    console.log("FolderData开始加载")
+    console.log('FolderData开始加载')
     const breadcrumb = ref([{ id: props.data[0].id, name: 'root', data: props.data[0].children }])
     const currentData = ref(breadcrumb.value[breadcrumb.value.length - 1].data)
 
@@ -75,7 +99,7 @@ export default {
     onMounted(() => {
       emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
       emit('currentPath', breadcrumb)
-      
+
       // console.log("已发送")
     })
 
@@ -86,9 +110,9 @@ export default {
     }
 
     const handleRowClick = (row) => {
-      if('editing' in row){
+      if ('editing' in row) {
         return
-      }else if (row.type === 'folder') {
+      } else if (row.type === 'folder') {
         if (row.name != 'root') {
           breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
         }
@@ -100,16 +124,17 @@ export default {
       }
     }
 
-    const createFolder = (folder) => {
+    const createFolder = (event, folder) => {
       delete folder.editing
+      event.stopPropagation();
 
       axios
-        .post('http://localhost:3000/api/v1/folders/newFolder', {
+        .post('/api/v1/folders/newFolder', {
           token: localStorage.getItem('token'),
           new_folder: folder.name,
           parent_folder_id: breadcrumb.value[breadcrumb.value.length - 1].id
         })
-        .then(response => {
+        .then((response) => {
           const code = response.data.code
           if (code == 1) {
             Object.assign(folder, response.data.data)
@@ -130,6 +155,8 @@ export default {
         .catch((error) => {
           console.error('发生错误：', error)
         })
+
+
     }
 
     const selection = (selected) => {
@@ -142,7 +169,7 @@ export default {
       () => {
         emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
         emit('currentPath', breadcrumb)
-        console.log("test:", breadcrumb.value[breadcrumb.value.length - 1])
+        console.log('test:', breadcrumb.value[breadcrumb.value.length - 1])
       },
       { deep: true }
     )

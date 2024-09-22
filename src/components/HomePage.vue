@@ -67,20 +67,18 @@
         <el-main class="main">
           <div style="display: flex; flex-direction: row">
             <UploadAndDownloadForm :data="dataInFolderData" :currentPath="currentPath" :selectedData="selectedData"
-              :consumer="consumer" @update-file-list="updateFileList"></UploadAndDownloadForm>
+              :consumer="consumer" @update-file-list="updateFileList" />
             <CreateFolder v-if="parentLoaded" :data="dataInFolderData" :parent_folder="currentFolder"
-              @updata_dataInFolderData="updata_dataInFolderData"></CreateFolder>
+              @updata_dataInFolderData="updata_dataInFolderData" />
             <OperateForm :currentPath="currentPath" :parent_folder="currentFolder" :data="dataInFolderData"
               :selectedData="selectedData" @deleteFrom_dataInFolderData="deleteFrom_dataInFolderData"
-              v-if="parentLoaded">
-            </OperateForm>
+              v-if="parentLoaded" />
             <ShareData :data="dataInFolderData" :currentPath="currentPath" :selectedData="selectedData"
-              v-if="parentLoaded">
-            </ShareData>
+              v-if="parentLoaded" />
           </div>
 
           <FolderData :data="dataInFolderData" v-if="parentLoaded" @selection="setSelectedData"
-            @currentFolder="setcurrentFolder" @currentPath="setCurrentPath"></FolderData>
+            @currentFolder="setcurrentFolder" @currentPath="setCurrentPath" />
         </el-main>
         <el-footer class="footer">Footer</el-footer>
       </el-container>
@@ -101,7 +99,7 @@ import { createConsumer } from '@rails/actioncable'
 export default {
   beforeRouteLeave(to, from, next) {
     console.log("触发：", this.dataInFolderData)
-    const url = 'http://localhost:3000/api/v1/sessions/quit';
+    const url = '/api/v1/sessions/quit';
 
     const formData = new FormData();
     formData.append('token', localStorage.getItem('token'));
@@ -143,7 +141,7 @@ export default {
       // console.log("currentPath.value:", currentPath.value)
       // console.log("currentFolder.value:", currentFolder.value)
       window.addEventListener('beforeunload', () => {
-        const url = 'http://localhost:3000/api/v1/sessions/quit';
+        const url = '/api/v1/sessions/quit';
 
         const formData = new FormData();
         formData.append('token', localStorage.getItem('token'));

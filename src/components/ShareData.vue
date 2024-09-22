@@ -125,7 +125,7 @@ export default {
 
     const send = () => {
       console.log("shareList:", shareList.value)
-      axios.post('http://localhost:3000/api/v1/shares/new', {
+      axios.post('/api/v1/shares/new', {
         token: localStorage.getItem('token'),
         data: shareList.value,
         varify: setShare.varify
@@ -160,7 +160,7 @@ export default {
     }
 
     const getShareFrom = () => {
-      axios.get('http://localhost:3000/api/v1/shares/getter', {
+      axios.get('/api/v1/shares/getter', {
         params: {
           token: localStorage.getItem('token'),
           link: getForm.link,
@@ -194,7 +194,7 @@ export default {
     }
 
     const sharedFile = () => {
-      axios.get('http://localhost:3000/api/v1/shares/shared', {
+      axios.get('/api/v1/shares/shared', {
         params: {
           token: localStorage.getItem('token')
         }

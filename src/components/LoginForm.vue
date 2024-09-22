@@ -132,7 +132,7 @@ export default {
     const login = () => {
       const { user } = loginForm;
       // 发送登录请求
-      axios.post('http://localhost:3000/api/v1/sessions/create', {
+      axios.post('/api/v1/sessions/create', {
         user: user,
         token: localStorage.getItem('token')
       })
@@ -170,7 +170,7 @@ export default {
 
       console.log(user)
 
-      axios.post('http://localhost:3000/api/v1/users/create', { user })
+      axios.post('/api/v1/users/create', { user })
         .then(response => {
           const code = response.data.code
           if (code == 1) {
