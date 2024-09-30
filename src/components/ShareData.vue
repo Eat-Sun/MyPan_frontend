@@ -82,18 +82,14 @@
 
 <script>
 import { ref, reactive, watch } from 'vue';
-import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
+import apiClient from '@/axios';
 
 export default {
   name: 'ShareData',
   props: {
     data: {
       type: Object,
-      required: true
-    },
-    currentPath: {
-      type: Array,
       required: true
     },
     selectedData: {
@@ -103,7 +99,7 @@ export default {
   },
   setup(props) {
     const root = ref(props.data)
-    const currentPath = ref(props.currentPath)
+
     const shareList = ref(props.selectedData)
     const visibleGetForm = ref(false)
     const visibleSetShare = ref(false)
@@ -124,8 +120,8 @@ export default {
     }
 
     const send = () => {
-      console.log("shareList:", shareList.value)
-      axios.post('/api/v1/shares/new', {
+      // console.log("shareList:", shareList.value)
+      apiClient.post('/api/v1/shares/new', {
         token: localStorage.getItem('token'),
         data: shareList.value,
         varify: setShare.varify
@@ -133,8 +129,8 @@ export default {
         .then(response => {
           const code = response.data.code;
           if (code == 1) {
-            const link = response.data.link
-            const varify = response.data.varify
+            let link = response.data.link
+            let varify = response.data.varify
             ElMessageBox.confirm(
               '链接：' + link + '\n提取码：' + varify,
               '分享成功',
@@ -160,7 +156,7 @@ export default {
     }
 
     const getShareFrom = () => {
-      axios.get('/api/v1/shares/getter', {
+      apiClient.get('/api/v1/shares/getter', {
         params: {
           token: localStorage.getItem('token'),
           link: getForm.link,
@@ -194,7 +190,7 @@ export default {
     }
 
     const sharedFile = () => {
-      axios.get('/api/v1/shares/shared', {
+      apiClient.get('/api/v1/shares/shared', {
         params: {
           token: localStorage.getItem('token')
         }
@@ -214,32 +210,13 @@ export default {
       visibleMySharedFileTable.value = true
     }
 
-    // const updateRootData = (folders, currentPath, uploadedFile) => {
-    //   // console.log("currentPath:", currentPath)
-    //   // console.log("folders:", folders)
-    //   if(currentPath.length > 0){
-    //     folders.forEach(item => {
-    //       // console.log("item:", item)
-    //       if(item.type == 'folder' && item.id == currentPath[0]?.id){
-    //         // console.log("getFolder:", item)
-    //         updateRootData(item.children, currentPath.slice(1), uploadedFile)
-    //       }
-    //     });
-    //   }else{
-    //     // console.log("arrive:", folders)
-    //     folders.push(uploadedFile)
-    //   }
-
-    // }
     const change_shareList = (selectedData) => {
-      console.log("1111111111111")
+      // console.log("1111111111111")
       shareList.value = selectedData
     }
 
     watch(() => props.selectedData, (newValue) => change_shareList(newValue), { deep: true });
-    watch(() => props.currentPath, () => {
-      currentPath.value = props.currentPath
-    }, { deep: true })
+
     return {
       shareSelectedTo,
       send,

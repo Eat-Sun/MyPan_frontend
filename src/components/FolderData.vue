@@ -43,14 +43,14 @@
               <More />
             </el-icon>{{ scope.row.name }}
           </div>
-          <div v-if="'editing' in scope.row && scope.row.editing">
+          <div v-if="'editing' in scope.row && scope.row.editing" @click.stop>
             <el-input v-model="scope.row.name" style="width: 120px; margin-right: 15px" placeholder="文件夹名称" clearable />
-            <el-button type="danger" circle @click="currentData.splice(scope.$index, 1); $event.stopPropagation()">
+            <el-button type="danger" circle @click="currentData.splice(scope.$index, 1)">
               <el-icon>
                 <Delete />
               </el-icon>
             </el-button>
-            <el-button type="primary" circle @click="createFolder($event, scope.row)">
+            <el-button type="primary" circle @click="createFolder(scope.row)">
               <el-icon><Select /></el-icon>
             </el-button>
           </div>
@@ -77,12 +77,12 @@
 
 <script>
 import { onMounted, ref, watch } from 'vue'
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import apiClient from '@/axios';
 
 export default {
   name: 'FolderData',
-  emits: ['selection', 'currentFolder', 'currentPath'],
+  emits: ['selection', 'currentFolder'],
   props: {
     data: {
       type: Object,
@@ -90,45 +90,31 @@ export default {
     }
   },
   setup(props, { emit }) {
-    console.log('FolderData开始加载')
     const breadcrumb = ref([{ id: props.data[0].id, name: 'root', data: props.data[0].children }])
     const currentData = ref(breadcrumb.value[breadcrumb.value.length - 1].data)
 
-    // console.log("breadcrumb:",breadcrumb.value)
-
     onMounted(() => {
       emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
-      emit('currentPath', breadcrumb)
-
-      // console.log("已发送")
     })
 
     const navigateTo = (index) => {
       breadcrumb.value = breadcrumb.value.slice(0, index + 1)
       currentData.value = breadcrumb.value[index].data
-      // console.log("breadcrumb:",breadcrumb.value)
     }
 
     const handleRowClick = (row) => {
-      if ('editing' in row) {
-        return
-      } else if (row.type === 'folder') {
+      if (row.type === 'folder') {
         if (row.name != 'root') {
           breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
+          currentData.value = row.children
         }
-
-        emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
-        emit('currentPath', breadcrumb)
-        // console.log('breadcrumb', breadcrumb.value)
-        currentData.value = row.children
       }
     }
 
-    const createFolder = (event, folder) => {
+    const createFolder = (folder) => {
       delete folder.editing
-      event.stopPropagation();
 
-      axios
+      apiClient
         .post('/api/v1/folders/newFolder', {
           token: localStorage.getItem('token'),
           new_folder: folder.name,
@@ -138,7 +124,7 @@ export default {
           const code = response.data.code
           if (code == 1) {
             Object.assign(folder, response.data.data)
-            breadcrumb.value.push({ id: folder.id, name: folder.name, data: folder.children })
+
             ElMessage({
               message: '创建成功',
               type: 'success',
@@ -155,21 +141,17 @@ export default {
         .catch((error) => {
           console.error('发生错误：', error)
         })
-
-
     }
 
-    const selection = (selected) => {
-      // console.log("selection:",selected)
-      emit('selection', selected)
+    const selection = (selection) => {
+      emit('selection', currentData.value.filter(item => selection.includes(item)))
     }
 
     watch(
-      breadcrumb,
+      () => breadcrumb.value,
       () => {
         emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
-        emit('currentPath', breadcrumb)
-        console.log('test:', breadcrumb.value[breadcrumb.value.length - 1])
+        // console.log('test:', breadcrumb.value[breadcrumb.value.length - 1])
       },
       { deep: true }
     )

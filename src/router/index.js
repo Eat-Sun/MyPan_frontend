@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginForm from '../components/LoginForm.vue'
 import HomePage from '../components/HomePage.vue'
-import axios from 'axios'
+import apiClient from '@/axios'
 // import { useRouter } from 'vue-router';
 
 const routes = [
@@ -12,8 +12,8 @@ const routes = [
     name: 'HomePage',
     component: HomePage,
     beforeEnter(to, from, next) {
-      axios
-        .get('/api/v1/attachments/getter', {
+      apiClient
+        .get('/api/v1/user_data/getter', {
           params: {
             token: localStorage.getItem('token')
           }

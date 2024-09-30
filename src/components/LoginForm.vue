@@ -43,10 +43,10 @@
 </template>
 
 <script>
-import axios from 'axios';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import apiClient from '@/axios';
 
 export default {
   setup() {
@@ -132,7 +132,7 @@ export default {
     const login = () => {
       const { user } = loginForm;
       // 发送登录请求
-      axios.post('/api/v1/sessions/create', {
+      apiClient.post('/api/v1/sessions/create', {
         user: user,
         token: localStorage.getItem('token')
       })
@@ -170,7 +170,7 @@ export default {
 
       console.log(user)
 
-      axios.post('/api/v1/users/create', { user })
+      apiClient.post('/api/v1/users/create', { user })
         .then(response => {
           const code = response.data.code
           if (code == 1) {

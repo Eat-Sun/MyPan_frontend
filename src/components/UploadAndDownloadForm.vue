@@ -47,18 +47,17 @@
 import { reactive, ref, onMounted, watch } from 'vue'
 import { debounce } from 'lodash'
 import { ElMessage } from 'element-plus';
-import axios from 'axios';
+import apiClient from '@/axios';
 
 export default {
-  name: 'FolderData',
-  emits: ['update-file-list'],
+  name: 'UploadAndDownloadForm',
   props: {
-    data: {
-      type: Object,
+    uploadList: {
+      type: Array,
       required: true
     },
-    currentPath: {
-      type: Array,
+    parent_folder: {
+      type: Object,
       required: true
     },
     selectedData: {
@@ -69,30 +68,19 @@ export default {
       required: true
     }
   },
-  setup(props, { emit }) {
-    const root = ref(props.data)
-    const currentPath = ref(props.currentPath)
+  setup(props) {
+    const parent_folder = ref(props.parent_folder)
     const selectedData = ref(props.selectedData)
+    const uploadList = ref(props.uploadList)    //进度列表
     const consumer = props.consumer
+
     let channel = null
     const dialogFormVisible = ref(false)
     const form = reactive({
       file_type: ''
     })
-
     const token = localStorage.getItem('token')
     const fileList = ref([]);
-    //上传的附带参数
-    const uploadParams = reactive({
-      token: token,
-      parent_folder_id: currentPath.value[currentPath.value.length - 1].id,
-      file_type: form.file_type
-    })
-    const uploadData = ref({})    //后端返回的上传数据
-    const uploadList = reactive([])    //进度列表
-
-    // console.log("currentPath:", currentPath.value)
-    // console.log("root:", root.value)
 
     const subscribeToChannel = () => {
       let channel = consumer.subscriptions.create(
@@ -105,12 +93,10 @@ export default {
           received(response) {
             switch (response.type) {
               case 'processing':
-                uploadData.value = response.data
-                updateFileList(uploadData.value)
+                updateFileList(response.data)
                 break
               case 'finish':
-                uploadData.value = response.data
-                updateRootData(root.value, currentPath.value, uploadData.value)
+                updateView(response.data)
                 break
             }
 
@@ -198,6 +184,13 @@ export default {
     // 实际执行上传
     const submitUpload = async () => {
       // console.log("fileList:", fileList.value)
+
+      let uploadParams = reactive({
+        token: token,
+        parent_folder_id: parent_folder.value.id,
+        file_type: form.file_type
+      })
+      console.log("uploadParams", uploadParams)
       let chunks = await createChunks(fileList.value)
       // console.log("chunks:", chunks)
       while (chunks.length > 0) {
@@ -217,49 +210,40 @@ export default {
       dialogFormVisible.value = false
     }
 
-    // 更新视图
-    const updateRootData = (folders, currentPath, uploadedFile) => {
-      console.log("currentPath:", currentPath)
-      console.log("props.currentPath:", props.currentPath)
-      console.log("folders:", folders)
-      if (currentPath.length > 0) {
-        folders.forEach(item => {
-          console.log("item:", item)
-          if (item.type == 'folder' && item.id == currentPath[0]?.id) {
-            console.log("getFolder:", item)
-            updateRootData(item.children, currentPath.slice(1), uploadedFile)
-          }
-        });
-      } else {
-        console.log("arrive:", folders)
-        folders.push(uploadedFile)
-      }
-
-    }
-
     // 实时更新上传进度
     const updateFileList = debounce((file) => {
-      const existingItem = uploadList.find((item) => item.name === file.name)
+      let ifExisted = uploadList.value.find((item) => item.b2_key === file.b2_key)
 
-      if (existingItem) {
-        if (file.percentage === '100%') {
-          const index = uploadList.indexOf(existingItem)
-          if (index > -1) {
-            uploadList.splice(index, 1)
+      if (ifExisted) {
+        let index = uploadList.value.indexOf(ifExisted)
+
+        if (index > -1) {
+          if (file.percentage === "100.0%") {
+            uploadList.value.splice(index, 1)
+          } else {
+            uploadList.value[index].percentage = file.percentage
           }
-        } else {
-          existingItem.percentage = file.percentage
         }
       } else {
-        uploadList.push(file)
+        uploadList.value.push(file)
       }
-
-      emit('update-file-list', uploadList)
+      // emit('update-file-list', uploadList.value)
     }, 1000)
+
+    //更新视图
+    const updateView = (file) => {
+      let nowFolder = parent_folder.value
+
+      if (nowFolder.data.includes(file)) {
+        return
+      } else {
+        nowFolder.data.push(file)
+      }
+    }
 
     // 下载文件
     const downloadFile = () => {
-      axios.get('/api/v1/attachments/downloader', {
+      apiClient.get('/api/v1/attachments/downloader', {
         params: {
           b2_keys: get_b2_keys()
         }
@@ -306,10 +290,8 @@ export default {
     }
 
     // 第一个参数一定要使用 ()=>
-    watch(() => props.currentPath, () => {
-      currentPath.value = props.currentPath
-      // console.log("upload:", props.currentPath)
-    }, { deep: true })
+    watch(() => props.parent_folder, () => parent_folder.value = props.parent_folder)
+    // watch(() => props.uploadList, () => uploadList = props.uploadList, { deep: true })
 
     return {
       dialogFormVisible,

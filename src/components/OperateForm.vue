@@ -20,14 +20,12 @@
         <a @click="navigateTo(index)" class="breadcrumb-text no-click">{{ item.name }}</a>
       </el-breadcrumb-item>
     </el-breadcrumb>
-    <el-table :data="currentData" @row-click="handleRowClick">
-      <el-table-column>
-        <template v-slot="scope">
-          <div>
-            <el-icon style="margin-right: 15px">
-              <Folder />
-            </el-icon> {{ scope.row.name }}
-          </div>
+    <el-table :data="getFolder" @row-click="handleRowClick">
+      <el-table-column label="Name" sortable>
+        <template #default="scope">
+          <el-icon style="margin-right: 15px">
+            <Folder />
+          </el-icon> {{ scope.row.name }}
         </template>
       </el-table-column>
     </el-table>
@@ -40,18 +38,13 @@
   </el-dialog>
 </template>
 <script>
-import { reactive, ref, watch } from 'vue'
-import axios from 'axios'
+import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus';
+import apiClient from '@/axios';
 
 export default {
   name: "OperateForm",
-  emits: ['deleteFrom_dataInFolderData'],
   props: {
-    currentPath: {
-      type: Array,
-      required: true
-    },
     data: {
       type: Array,
       required: true
@@ -65,25 +58,27 @@ export default {
       required: true
     }
   },
-  setup(props, { emit }) {
+  setup(props) {
     const data = reactive(props.data) //原始数据
-    const currentPath = ref(props.currentPath) //欲操作文件所在的文件夹路径
+    const origin_folder = ref(props.parent_folder) //欲操作文件原文件夹
     const breadcrumb = ref([{ id: data[0].id, name: 'root', data: data[0].children }]) //移动文件时的目标文件夹路径
-    const currentData = ref(breadcrumb.value[breadcrumb.value.length - 1].data)
     const showOperationButton = ref(false)
     const visibleMoveFileTable = ref(false)
 
     const navigateTo = (index) => {
       breadcrumb.value = breadcrumb.value.slice(0, index + 1)
-      currentData.value = breadcrumb.value[index].data
-      console.log("breadcrumb.value:", breadcrumb.value)
+      // console.log("breadcrumb.value:", breadcrumb.value)
     }
 
+    const getFolder = computed(() => {
+      return breadcrumb.value[breadcrumb.value.length - 1].data.filter(item => item.type === 'folder')
+    })
+
     const handleRowClick = (row) => {
+      // console.log("now", row)
       if (row.name != 'root') {
         breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
       }
-      currentData.value = row.children
     }
 
     const changeOperationButton = () => {
@@ -95,16 +90,16 @@ export default {
       }
     }
 
+    // 删除文件
     const deleteSelected = () => {
-      // emit('deleteFrom_dataInFolderData')
-      axios.post('/api/v1/attachments/deleter', {
+      apiClient.post('/api/v1/attachments/deleter', {
         token: localStorage.getItem('token'),
         data: props.selectedData
       }).then(response => {
         const code = response.data.code;
-        console.log("code:", code)
+        // console.log("code:", code)
         if (code == 1) {
-          emit('deleteFrom_dataInFolderData')
+          removeFrom_OriginFolder()
 
           ElMessage({
             message: '删除成功',
@@ -125,23 +120,19 @@ export default {
 
     // 移动文件
     const moveSelected = () => {
-      let files = props.selectedData.map(file => {
-        return { id: file.id, type: file.type };
-      });
       let targetMenuId = breadcrumb.value[breadcrumb.value.length - 1].id;
 
-      axios.post('/api/v1/attachments/mover', {
+      apiClient.post('/api/v1/user_data/mover', {
         token: localStorage.getItem('token'),
         data: {
-          filelist: files,
+          filelist: props.selectedData,
           target_folder_id: targetMenuId
         }
       }).then(response => {
         const code = response.data.code;
         if (code == 1) {
-          updateRootData(data, currentPath.value, breadcrumb.value, props.selectedData)
-          // console.log("data:",data)
-          // console.log("props.data:",props.data)
+          updateRootData()
+
           ElMessage({
             message: '移动成功',
             type: 'success',
@@ -149,7 +140,7 @@ export default {
           })
         } else {
           ElMessage({
-            message: '移动失败',
+            message: '移动失败' + response.data.exception || '',
             type: 'error',
             plain: true,
           })
@@ -161,47 +152,29 @@ export default {
       visibleMoveFileTable.value = false
     }
 
-    //文件移动
-    const updateRootData = (data, currentPath, breadcrumb, selectedData) => {
-      // console.log("data:",data)
-      // console.log("currentPath:",currentPath)
-      // console.log("breadcrumb:",breadcrumb)
-      // console.log("selectedData:",selectedData)
-      //在原始数据中寻找删除文件的路径
-      if (currentPath.length > 0) {
-        data.forEach(item => {
-          if (item.type == 'folder' && item.id == currentPath[0]?.id) {
-            updateRootData(item.children, currentPath.slice(1), breadcrumb, selectedData)
-          }
-        })
-      } else {
-        //找到了删除文件的路径
-        for (let i = data.length - 1; i >= 0; i--) {
-          if (selectedData.includes(data[i])) {
-            data.splice(i, 1);
-          }
+    //从原文件夹移除文件
+    const removeFrom_OriginFolder = () => {
+      for (let i = origin_folder.value.data.length - 1; i >= 0; i--) {
+        if (props.selectedData.includes(origin_folder.value.data[i])) {
+          origin_folder.value.data.splice(i, 1);
         }
-      }
-      //在原始数据中寻找添加文件的路径
-      if (breadcrumb.length > 0) {
-        data.forEach(item => {
-          if (item.type == 'folder' && item.id == breadcrumb[0]?.id) {
-            updateRootData(item.children, currentPath, breadcrumb.slice(1), selectedData)
-          }
-        });
-      } else {
-        //找到了添加文件的路径
-        data.push(...selectedData)
       }
     }
 
-    watch(() => props.selectedData, changeOperationButton, { deep: true });
-    watch(() => props.currentPath, () => { currentPath.value = props.currentPath })
+    //更新视图
+    const updateRootData = () => {
+      const target_folder = ref(breadcrumb.value[breadcrumb.value.length - 1])
 
+      target_folder.value.data.push(...props.selectedData)
+      removeFrom_OriginFolder()
+    }
+
+    watch(() => props.selectedData, changeOperationButton, { deep: true });
+    watch(() => props.parent_folder, () => { origin_folder.value = props.parent_folder })
     return {
       breadcrumb,
       navigateTo,
-      currentData,
+      getFolder,
       handleRowClick,
       deleteSelected,
       showOperationButton,
