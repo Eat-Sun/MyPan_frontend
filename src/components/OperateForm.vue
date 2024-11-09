@@ -46,7 +46,7 @@ export default {
   name: "OperateForm",
   props: {
     data: {
-      type: Array,
+      type: Object,
       required: true
     },
     parent_folder: {
@@ -60,8 +60,8 @@ export default {
   },
   setup(props) {
     const data = reactive(props.data) //原始数据
-    const origin_folder = ref(props.parent_folder) //欲操作文件原文件夹
-    const breadcrumb = ref([{ id: data[0].id, name: 'root', data: data[0].children }]) //移动文件时的目标文件夹路径
+    const parent_folder = ref(props.parent_folder) //欲操作文件原文件夹
+    const breadcrumb = ref([{ id: data.id, name: 'root', data: data.children }]) //移动文件时的目标文件夹路径
     const showOperationButton = ref(false)
     const visibleMoveFileTable = ref(false)
 
@@ -154,23 +154,26 @@ export default {
 
     //从原文件夹移除文件
     const removeFrom_OriginFolder = () => {
-      for (let i = origin_folder.value.data.length - 1; i >= 0; i--) {
-        if (props.selectedData.includes(origin_folder.value.data[i])) {
-          origin_folder.value.data.splice(i, 1);
+      console.log("parent_folder", parent_folder.value)
+      for (let i = parent_folder.value.data.length - 1; i >= 0; i--) {
+        if (props.selectedData.includes(parent_folder.value.data[i])) {
+          parent_folder.value.data.splice(i, 1);
         }
       }
     }
 
     //更新视图
     const updateRootData = () => {
+      // console.log(origin_folder.value)
       const target_folder = ref(breadcrumb.value[breadcrumb.value.length - 1])
+      let need_to_add = props.selectedData.filter(item => parent_folder.value.children.includes(item))
 
-      target_folder.value.data.push(...props.selectedData)
+      target_folder.value.data.push(...need_to_add)
       removeFrom_OriginFolder()
     }
 
     watch(() => props.selectedData, changeOperationButton, { deep: true });
-    watch(() => props.parent_folder, () => { origin_folder.value = props.parent_folder })
+    watch(() => props.parent_folder, () => { parent_folder.value = props.parent_folder })
     return {
       breadcrumb,
       navigateTo,

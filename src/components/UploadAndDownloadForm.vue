@@ -232,12 +232,10 @@ export default {
 
     //更新视图
     const updateView = (file) => {
-      let nowFolder = parent_folder.value
-
-      if (nowFolder.data.includes(file)) {
+      if (parent_folder.value.data.includes(file)) {
         return
       } else {
-        nowFolder.data.push(file)
+        parent_folder.value.data.push(file)
       }
     }
 
@@ -290,7 +288,7 @@ export default {
     }
 
     // 第一个参数一定要使用 ()=>
-    watch(() => props.parent_folder, () => parent_folder.value = props.parent_folder)
+    watch(() => props.parent_folder, () => parent_folder.value = props.parent_folder, { deep: true })
     // watch(() => props.uploadList, () => uploadList = props.uploadList, { deep: true })
 
     return {

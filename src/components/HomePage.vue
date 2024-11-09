@@ -70,10 +70,11 @@
               :consumer="consumer" />
             <CreateFolder :parent_folder="currentFolder" />
             <OperateForm :parent_folder="currentFolder" :data="dataInFolderData" :selectedData="selectedData" />
-            <ShareData :data="dataInFolderData" :selectedData="selectedData" />
+            <ShareData :data="dataInFolderData" :selectedData="selectedData" :topSelectedData="topSelectedData" />
           </div>
 
-          <FolderData :data="dataInFolderData" @selection="setSelectedData" @currentFolder="setcurrentFolder" />
+          <FolderData :data="dataInFolderData" @selection="setSelectedData" @topSelection="setTopSelection"
+            @currentFolder="setcurrentFolder" />
         </el-main>
         <el-footer class="footer">Footer</el-footer>
       </el-container>
@@ -120,15 +121,19 @@ export default {
     const uploadList = ref([])
 
     const selectedData = ref([])
+    const topSelectedData = ref([])
     const currentFolder = ref()
 
     onBeforeMount(() => {
-      dataInFolderData.value = JSON.parse(route.query.folder_data);
-      // console.log("dataInFolderData.value:", dataInFolderData.value)
-      // console.log("folderMenu.value:", folderMenu.value)
-      // console.log("currentFolder.value:", currentFolder.value)
+      if (Array.isArray(JSON.parse(route.query.folder_data))) {
+        dataInFolderData.value = processData(JSON.parse(route.query.folder_data))
+      } else {
+        dataInFolderData.value = JSON.parse(route.query.folder_data)
+      }
+
+      currentFolder.value = { id: dataInFolderData.value.id, name: dataInFolderData.value.name, data: dataInFolderData.value.children }
+
       window.addEventListener('unload', () => {
-        // console.log("触发2：", apiClient.defaults.baseURL)
         const url = apiClient.defaults.baseURL + '/api/v1/sessions/quit';
         const formData = new FormData();
         formData.append('token', localStorage.getItem('token'));
@@ -137,6 +142,33 @@ export default {
         navigator.sendBeacon(url, formData);
       });
     })
+
+    const processData = (data) => {
+      console.log(data)
+      let stack = []
+      let folders = data[0]
+      let attachments = data[1]
+      let root = folders.find(item => item.ancestry == null)
+
+      stack.push(root)
+
+      while (stack.length > 0) {
+        let folder = stack.pop()
+
+        let subFolders = folders.filter(item => item.ancestry == folder.numbering)
+        let subAttachments = attachments.filter(item => item.folder_id == folder.id)
+        console.log("subFolders", subFolders)
+        if (subFolders && subFolders.length > 0) {
+          folder.children.push(...subFolders)
+          stack.push(...subFolders)
+        }
+        if (subAttachments && subAttachments.length > 0) {
+          folder.children.push(...subAttachments)
+        }
+      }
+
+      return root
+    }
 
     const handleSelect = (index) => {
       console.log('点击了菜单项 ' + index)
@@ -155,9 +187,14 @@ export default {
       console.log('selectedData.value:', selectedData.value)
     }
 
+    const setTopSelection = (topSelected) => {
+      topSelectedData.value = topSelected
+      // console.log("topSelectedData", topSelectedData.value)
+    }
+
     const setcurrentFolder = (now) => {
       currentFolder.value = now
-      console.log("currentFolder.value:", currentFolder.value)
+      // console.log("currentFolder.value:", currentFolder.value)
     }
 
     return {
@@ -169,7 +206,9 @@ export default {
       handleClose,
       dataInFolderData,
       setSelectedData,
+      setTopSelection,
       selectedData,
+      topSelectedData,
       setcurrentFolder,
       currentFolder,
       consumer

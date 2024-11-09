@@ -25,8 +25,10 @@ export default {
         id: '',
         type: 'folder',
         name: '',
-        editing: true,
-        children: []
+        numbering: '',
+        ancestry: '',
+        children: [],
+        editing: true
       })
       // console.log("newFolder", newFolder)
       // console.log("parent_folder:", parent_folder.value)

@@ -76,13 +76,13 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import apiClient from '@/axios';
 
 export default {
   name: 'FolderData',
-  emits: ['selection', 'currentFolder'],
+  emits: ['selection', 'topSelection', 'currentFolder'],
   props: {
     data: {
       type: Object,
@@ -90,14 +90,12 @@ export default {
     }
   },
   setup(props, { emit }) {
-    const breadcrumb = ref([{ id: props.data[0].id, name: 'root', data: props.data[0].children }])
-    const currentData = ref(breadcrumb.value[breadcrumb.value.length - 1].data)
-
-    onMounted(() => {
-      emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
-    })
+    const breadcrumb = ref([{ id: props.data.id, name: 'root', data: props.data.children }])
+    const currentFolder = ref(breadcrumb.value[breadcrumb.value.length - 1])
+    const currentData = ref(currentFolder.value.data)
 
     const navigateTo = (index) => {
+      // console.log("indec：", index)
       breadcrumb.value = breadcrumb.value.slice(0, index + 1)
       currentData.value = breadcrumb.value[index].data
     }
@@ -118,7 +116,7 @@ export default {
         .post('/api/v1/folders/newFolder', {
           token: localStorage.getItem('token'),
           new_folder: folder.name,
-          parent_folder_id: breadcrumb.value[breadcrumb.value.length - 1].id
+          parent_folder_numbering: currentFolder.value.numbering
         })
         .then((response) => {
           const code = response.data.code
@@ -144,17 +142,26 @@ export default {
     }
 
     const selection = (selection) => {
-      emit('selection', currentData.value.filter(item => selection.includes(item)))
+      // emit('selection', currentData.value.filter(item => selection.includes(item)))
+      emit('selection', selection)
+      emit('topSelection', currentData.value.filter(item => selection.includes(item)))
     }
 
     watch(
       () => breadcrumb.value,
       () => {
         emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
-        // console.log('test:', breadcrumb.value[breadcrumb.value.length - 1])
       },
       { deep: true }
     )
+    // watch(
+    //   () => props.data,
+    //   () => {
+    //     console.log("发生改变")
+    //     breadcrumb.value = [{ id: props.data[0].id, name: 'root', data: props.data[0].children }]
+    //   },
+    //   { deep: true }
+    // )
 
     return {
       breadcrumb,
