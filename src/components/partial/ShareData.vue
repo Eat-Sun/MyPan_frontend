@@ -91,7 +91,7 @@ import apiClient from '@/axios';
 export default {
   name: 'ShareData',
   props: {
-    data: {
+    Data: {
       type: Object,
       required: true
     },
@@ -105,8 +105,9 @@ export default {
     }
   },
   setup(props) {
-    const root = ref(props.data)
-    console.log("props.data", props.data)
+    const root = ref(props.Data)
+    console.log("props.data", props.Data)
+
     const token = localStorage.getItem('token')
 
     const shareList = ref(props.selectedData)

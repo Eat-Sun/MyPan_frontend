@@ -1,13 +1,14 @@
 <template>
   <el-divider />
   <div>
-    <el-breadcrumb separator="/">
+    <el-breadcrumb separator="/" style="height: 10px">
       <el-breadcrumb-item v-for="(item, index) in breadcrumb" :key="index">
         <a @click="navigateTo(index)" class="breadcrumb-text no-click">{{ item.name }}</a>
       </el-breadcrumb-item>
     </el-breadcrumb>
 
-    <el-table :data="currentData" @row-click="handleRowClick" @selection-change="selection">
+    <el-empty v-if="currentData.length == 0" description="暂无文件" />
+    <el-table v-else :data="currentData" @row-click="handleRowClick" @selection-change="selection">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="Name" sortable>
         <template v-slot="scope">
@@ -24,27 +25,24 @@
             {{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'word'">
-            <el-icon style="margin-right: 15px">
-              <Document />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'video'">
-            <el-icon style="margin-right: 15px">
-              <VideoCamera />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'audio'">
-            <el-icon style="margin-right: 15px">
-              <Headset />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else>
-            <el-icon style="margin-right: 15px">
-              <More />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-if="'editing' in scope.row && scope.row.editing" @click.stop>
-            <el-input v-model="scope.row.name" style="width: 120px; margin-right: 15px" placeholder="文件夹名称" clearable />
+            <el-input
+              v-model="scope.row.name"
+              style="width: 120px; margin-right: 15px"
+              placeholder="文件夹名称"
+              clearable
+            />
             <el-button type="danger" circle @click="currentData.splice(scope.$index, 1)">
               <el-icon>
                 <Delete />
@@ -76,22 +74,19 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import apiClient from '@/axios';
+import apiClient from '@/axios'
 
 export default {
   name: 'FolderData',
-  emits: ['selection', 'topSelection', 'currentFolder'],
-  props: {
-    data: {
-      type: Object,
-      required: true
-    }
-  },
+  emits: ['selected', 'topSelection', 'currentFolder'],
   setup(props, { emit }) {
-    const breadcrumb = ref([{ id: props.data.id, name: 'root', data: props.data.children }])
+    let data = inject('livingData')
+    // console.log("inject", inject('message'))
+    const breadcrumb = ref([{ id: data.value.id, name: 'root', data: data.value.children }])
     const currentFolder = ref(breadcrumb.value[breadcrumb.value.length - 1])
+
     const currentData = ref(currentFolder.value.data)
 
     const navigateTo = (index) => {
@@ -141,10 +136,13 @@ export default {
         })
     }
 
-    const selection = (selection) => {
-      // emit('selection', currentData.value.filter(item => selection.includes(item)))
-      emit('selection', selection)
-      emit('topSelection', currentData.value.filter(item => selection.includes(item)))
+    const selection = (selected) => {
+      // console.log("selected:", selected)
+      emit('selected', selected)
+      emit(
+        'topSelection',
+        currentData.value.filter((item) => selected.includes(item))
+      )
     }
 
     watch(
@@ -154,14 +152,11 @@ export default {
       },
       { deep: true }
     )
-    // watch(
-    //   () => props.data,
-    //   () => {
-    //     console.log("发生改变")
-    //     breadcrumb.value = [{ id: props.data[0].id, name: 'root', data: props.data[0].children }]
-    //   },
-    //   { deep: true }
-    // )
+
+    // watch(() => props.Data, () => {
+    //   data.value = props.Data
+    //   console.log('数据为：', data.value)
+    // })
 
     return {
       breadcrumb,
