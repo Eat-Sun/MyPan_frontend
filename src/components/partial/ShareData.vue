@@ -106,7 +106,7 @@ export default {
   },
   setup(props) {
     const root = ref(props.Data)
-    console.log("props.data", props.Data)
+    // console.log("props.data", props.Data)
 
     const token = localStorage.getItem('token')
 
@@ -186,7 +186,7 @@ export default {
           if (code == 1) {
             const newData = response.data.data
             processData(newData)
-            console.log("root.value", root.value)
+            // console.log("root.value", root.value)
 
             ElMessage({
               message: '获取成功',
@@ -253,8 +253,8 @@ export default {
         const message = response.data.message
 
         if (code == 1) {
-          console.log("row", row)
-          console.log("myShareTable", myShareTable.value)
+          // console.log("row", row)
+          // console.log("myShareTable", myShareTable.value)
           let index = myShareTable.value.findIndex(item => item == row)
           myShareTable.value.splice(index, 1)
 

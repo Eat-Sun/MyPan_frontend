@@ -25,24 +25,27 @@
             {{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'word'">
-            <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Document />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'video'">
-            <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <VideoCamera />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'audio'">
-            <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <Headset />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-else>
-            <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px">
+              <More />
+            </el-icon>{{ scope.row.name }}
           </div>
           <div v-if="'editing' in scope.row && scope.row.editing" @click.stop>
-            <el-input
-              v-model="scope.row.name"
-              style="width: 120px; margin-right: 15px"
-              placeholder="文件夹名称"
-              clearable
-            />
+            <el-input v-model="scope.row.name" style="width: 120px; margin-right: 15px" placeholder="文件夹名称" clearable />
             <el-button type="danger" circle @click="currentData.splice(scope.$index, 1)">
               <el-icon>
                 <Delete />
@@ -74,39 +77,39 @@
 </template>
 
 <script>
-import { inject, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import apiClient from '@/axios'
 
 export default {
   name: 'FolderData',
-  emits: ['selected', 'topSelection', 'currentFolder'],
+  emits: ['selected', 'topSelection', 'parentFolder'],
   setup(props, { emit }) {
-    let data = inject('livingData')
-    // console.log("inject", inject('message'))
-    const breadcrumb = ref([{ id: data.value.id, name: 'root', data: data.value.children }])
-    const currentFolder = ref(breadcrumb.value[breadcrumb.value.length - 1])
-
-    const currentData = ref(currentFolder.value.data)
+    let data = inject('formData')
+    console.log('data', data.value)
+    const breadcrumb = ref([{ id: data.value.id, numbering: data.value.numbering, name: 'root', data: data.value.children }])
+    const currentFolder = computed(() => breadcrumb.value[breadcrumb.value.length - 1])
+    const currentData = computed(() => currentFolder.value.data)
 
     const navigateTo = (index) => {
-      // console.log("indec：", index)
       breadcrumb.value = breadcrumb.value.slice(0, index + 1)
-      currentData.value = breadcrumb.value[index].data
+      // console.log('breadcrumb', breadcrumb.value)
+      // console.log('currentFolder', currentFolder.value)
+      // console.log('currentData', currentData.value)
     }
 
     const handleRowClick = (row) => {
-      if (row.type === 'folder') {
-        if (row.name != 'root') {
-          breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
-          currentData.value = row.children
-        }
+      if (row.type === 'folder' && row.name != 'root') {
+        breadcrumb.value.push({ id: row.id, numbering: row.numbering, name: row.name, data: row.children })
       }
+      // console.log('breadcrumb', breadcrumb.value)
+      // console.log('currentFolder', currentFolder.value)
+      // console.log('currentData', currentData.value)
     }
 
     const createFolder = (folder) => {
       delete folder.editing
-
+      // console.log('currentData', currentData.value)
       apiClient
         .post('/api/v1/folders/newFolder', {
           token: localStorage.getItem('token'),
@@ -148,15 +151,10 @@ export default {
     watch(
       () => breadcrumb.value,
       () => {
-        emit('currentFolder', breadcrumb.value[breadcrumb.value.length - 1])
+        emit('parentFolder', currentFolder.value)
       },
       { deep: true }
     )
-
-    // watch(() => props.Data, () => {
-    //   data.value = props.Data
-    //   console.log('数据为：', data.value)
-    // })
 
     return {
       breadcrumb,

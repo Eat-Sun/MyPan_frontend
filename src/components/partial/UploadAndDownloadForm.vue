@@ -30,14 +30,8 @@
       </el-form-item>
 
       <el-form-item style="display: flex; align-items: center">
-        <el-upload
-          v-model:file-list="fileList"
-          :auto-upload="false"
-          :http-request="submitUpload"
-          :on-change="addTo_fileList"
-          :on-remove="removeFrom_fileList"
-          style="margin-top: 12px"
-        >
+        <el-upload v-model:file-list="fileList" :auto-upload="false" :http-request="submitUpload"
+          :on-change="addTo_fileList" :on-remove="removeFrom_fileList" style="margin-top: 12px">
           <el-button type="primary">选择文件</el-button>
         </el-upload>
         <div style="flex: 1"></div>
@@ -48,18 +42,14 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted, watch } from 'vue'
-import { debounce } from 'lodash'
+import { reactive, ref, onMounted, toRef, inject } from 'vue'
+import { throttle } from 'lodash'
 import { ElMessage } from 'element-plus'
 import apiClient from '@/axios'
 
 export default {
   name: 'UploadAndDownloadForm',
   props: {
-    uploadList: {
-      type: Array,
-      required: true
-    },
     parent_folder: {
       type: Object,
       required: true
@@ -76,12 +66,12 @@ export default {
     }
   },
   setup(props) {
-    const parent_folder = ref(props.parent_folder)
-    const selectedData = ref(props.selectedData)
-    const uploadList = ref(props.uploadList) //进度列表
+    const parent_folder = toRef(props, 'parent_folder')
+    const selectedData = toRef(props, 'selectedData')
+    const uploadList = inject('uploadList') //进度列表
     const consumer = props.consumer
     const freeSpace = ref(props.free_space)
-    console.log('parent_folder', parent_folder.value)
+    // console.log('parent_folder', parent_folder.value)
     let channel = null
     const dialogFormVisible = ref(false)
     const form = reactive({
@@ -125,7 +115,7 @@ export default {
     })
 
     const addTo_fileList = (uploadFile) => {
-      // console.log("uploadFile", uploadFile)
+      // console.log('uploadFile', uploadFile)
       let temp = freeSpace.value - uploadFile.size
 
       if (temp > 0) {
@@ -214,9 +204,9 @@ export default {
         parent_folder_id: parent_folder.value.id,
         file_type: form.file_type
       })
-      console.log('uploadParams', uploadParams)
+      // console.log('uploadParams', uploadParams)
       let chunks = await createChunks(fileList.value)
-      // console.log("chunks:", chunks)
+      // console.log('chunks:', chunks)
       while (chunks.length > 0) {
         chunks.forEach((file_chunks) => {
           // console.log("file_chunks", file_chunks[0])
@@ -235,20 +225,12 @@ export default {
     }
 
     // 实时更新上传进度
-    const updateFileList = debounce((file) => {
-      // console.log("uploadList", uploadList.value)
-      let ifExisted = uploadList.value.find((item) => item.b2_key === file.b2_key)
+    const updateFileList = throttle((file) => {
+      // console.log("file", file)
+      let index = uploadList.value.findIndex((item) => item.b2_key === file.b2_key)
 
-      if (ifExisted) {
-        let index = uploadList.value.indexOf(ifExisted)
-
-        if (index > -1) {
-          if (file.percentage === '100.0%') {
-            uploadList.value.splice(index, 1)
-          } else {
-            uploadList.value[index].percentage = file.percentage
-          }
-        }
+      if (index > -1) {
+        uploadList.value[index].percentage = file.percentage
       } else {
         uploadList.value.push(file)
       }
@@ -265,13 +247,19 @@ export default {
 
     // 下载文件
     const downloadFile = () => {
+      let messageInstance = ElMessage({
+        message: '正在获取下载连接...',
+        type: 'warning',
+        duration: 0
+      });
       apiClient
         .get('/api/v1/attachments/downloader', {
           params: {
-            b2_keys: get_b2_keys()
+            key_and_names: key_and_names()
           }
         })
         .then((response) => {
+          messageInstance.close()
           const code = response.data.code
 
           if (code == 1) {
@@ -302,24 +290,17 @@ export default {
         })
     }
 
-    // 获取选中的文件的b2_key
-    const get_b2_keys = () => {
-      // console.log('selectedData:', selectedData)
+    // 获取选中的文件的b2_key和文件名
+    const key_and_names = () => {
+      // console.log('selectedData:', selectedData.value)
       let key_and_names = []
       selectedData.value.forEach((item) => {
         // console.log("item:",item)
         key_and_names.push({ key: item.b2_key, name: item.name })
       })
-
-      return keys
+      // console.log("key_and_names:", key_and_names)
+      return key_and_names
     }
-
-    // 第一个参数一定要使用 ()=>
-    watch(
-      () => props.parent_folder,
-      () => (parent_folder.value = props.parent_folder),
-      { deep: true }
-    )
 
     return {
       dialogFormVisible,

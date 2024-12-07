@@ -1,31 +1,19 @@
 <template>
   <el-main class="main">
     <div style="display: flex; flex-direction: row">
-      <UploadAndDownloadForm
-        :uploadList="uploadList"
-        :parent_folder="currentFolder"
-        :selectedData="selectedData"
-        :consumer="consumer"
-        :free_space="freeSpace"
-      />
-      <CreateFolder :parent_folder="currentFolder" />
-      <OperateForm
-        :parent_folder="currentFolder"
-        :selectedData="selectedData"
-        :topSelectedData="topSelectedData"
-        :free_space="freeSpace"
-        :recycledData="recycledData"
-      />
-      <ShareData :Data="data" :selectedData="selectedData" :topSelectedData="topSelectedData" />
+      <UploadAndDownloadForm :parent_folder="parentFolder" :selectedData="selectedData" :consumer="consumer"
+        :free_space="freeSpace" />
+      <CreateFolder :parent_folder="parentFolder" />
+      <OperateForm :parent_folder="parentFolder" :selectedData="selectedData" :topSelectedData="topSelectedData"
+        :free_space="freeSpace" :recycledData="recycledData" />
+      <ShareData :Data="formData" :selectedData="selectedData" :topSelectedData="topSelectedData" />
     </div>
 
-    <FolderData
-      v-if="view == 'living'"
-      @selected="setSelectedData"
-      @topSelection="setTopSelection"
-      @currentFolder="setcurrentFolder"
-    />
-    <RecycleBin v-if="view == 'recycled'"></RecycleBin>
+    <FolderData v-if="view == 'living'" @selected="setSelectedData" @topSelection="setTopSelection"
+      @parentFolder="setparentFolder" />
+    <ClassifyVeiw v-else-if="view == 'classify'" :selectedData="selectedData" @selected="setSelectedData">
+    </ClassifyVeiw>
+    <RecycleBin v-else-if="view == 'recycled'"></RecycleBin>
   </el-main>
 </template>
 
@@ -35,9 +23,11 @@ import CreateFolder from './partial/CreateFolder.vue'
 import OperateForm from './partial/OperateForm.vue'
 import ShareData from './partial/ShareData.vue'
 import FolderData from './partial/FolderData.vue'
+import ClassifyVeiw from './partial/ClassifyVeiw.vue'
 import RecycleBin from './partial/RecycleBin.vue'
 import { inject, onBeforeMount, ref, watch } from 'vue'
 import { createConsumer } from '@rails/actioncable'
+
 
 export default {
   props: {
@@ -59,32 +49,33 @@ export default {
     OperateForm,
     ShareData,
     FolderData,
+    ClassifyVeiw,
     RecycleBin
   },
   setup(props) {
-    const data = inject('livingData')
+    const formData = inject('formData')
     const recycledData = inject('recycledData')
     const view = ref(props.operate_view)
     const consumer = createConsumer('ws://localhost:3000/cable')
     const uploadList = ref(props.upload_list)
     const freeSpace = ref(props.free_space)
 
-    const currentFolder = ref()
+    const parentFolder = ref()
     const selectedData = ref([])
     const topSelectedData = ref([])
 
     onBeforeMount(() => {
-      currentFolder.value = { id: data.value.id, name: data.value.name, data: data.value.children }
+      parentFolder.value = { id: formData.value.id, name: formData.value.name, data: formData.value.children }
     })
 
-    const setcurrentFolder = (now) => {
-      currentFolder.value = now
-      // console.log("currentFolder.value:", currentFolder.value)
+    const setparentFolder = (now) => {
+      parentFolder.value = now
+      // console.log("parentFolder.value:", parentFolder.value)
     }
 
     const setSelectedData = (selected) => {
       selectedData.value = selected
-      console.log('selectedData.value:', selectedData.value)
+      // console.log('selectedData.value:', selectedData.value)
     }
 
     const setTopSelection = (topSelected) => {
@@ -99,16 +90,17 @@ export default {
         console.log('现在是：', view.value)
       }
     )
+    // watch(() => selectedData, () => console.log('selectedData', selectedData.value))
 
     return {
-      data,
+      formData,
       recycledData,
       view,
       consumer,
       uploadList,
       freeSpace,
-      currentFolder,
-      setcurrentFolder,
+      parentFolder,
+      setparentFolder,
       selectedData,
       setSelectedData,
       topSelectedData,

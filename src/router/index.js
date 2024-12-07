@@ -3,7 +3,7 @@ import LoginForm from '../views/LoginForm.vue'
 import HomePage from '../views/HomePage.vue'
 import apiClient from '@/axios'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 
 const routes = [
   { path: '/', redirect: '/login' }, // 默认路由重定向到 /login
@@ -12,8 +12,37 @@ const routes = [
     path: '/homepage',
     name: 'HomePage',
     component: HomePage,
+    beforeEnter(to, from, next) {
+      apiClient
+        .get('/api/v1/user_data/getter', {
+          params: {
+            token: localStorage.getItem('token')
+          }
+        })
+        .then((response) => {
+          let code = response.data.code
+
+          if (code == 1) {
+            let data = response.data.data
+            console.log('data', data)
+            to.query.form_data = data.form_data
+            to.query.free_space = data.free_space
+
+            next()
+          } else {
+            next(
+              { name: 'LoginForm' },
+              ElMessage({
+                message: '未登陆',
+                type: 'error',
+                plain: true
+              })
+            )
+          }
+        })
+    }
     // beforeEnter(to, from, next) {
-    //   to.query.folder_data = [
+    //   to.query.form_data = [
     //     [
     //       {
     //         id: 1,
@@ -103,35 +132,6 @@ const routes = [
 
     //   next()
     // }
-    beforeEnter(to, from, next) {
-      apiClient
-        .get('/api/v1/user_data/getter', {
-          params: {
-            token: localStorage.getItem('token')
-          }
-        })
-        .then((response) => {
-          let code = response.data.code
-
-          if (code == 1) {
-            let data = response.data.data
-            // console.log('data', data)
-            to.query.folder_data = data.folder_data
-            to.query.free_space = data.free_space
-
-            next()
-          } else {
-            next(
-              { name: 'LoginForm' },
-              ElMessage({
-                message: '未登陆',
-                type: 'error',
-                plain: true
-              })
-            )
-          }
-        })
-    }
   }
 ]
 

@@ -131,13 +131,20 @@ export default {
     const router = useRouter();
     const login = () => {
       const { user } = loginForm;
+      let messageInstance = ElMessage({
+        message: '登陆中...',
+        type: 'info',
+        duration: 0
+      });
       // 发送登录请求
       apiClient.post('/api/v1/sessions/create', {
         user: user,
         token: localStorage.getItem('token')
       })
         .then(response => {
+          messageInstance.close()
           const code = response.data.code;
+
           if (code == 1) {
             const token = response.data.data.token;
             // const dataInFolderData = response.data.data.folder_data

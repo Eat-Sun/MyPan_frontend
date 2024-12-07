@@ -1,15 +1,8 @@
 <template>
   <el-divider />
-  <el-empty v-if="currentData.length == 0" description="暂无文件" />
-  <el-table
-    v-else
-    :data="currentData"
-    @sortable="true"
-    sort-method="updated_at"
-    @cell-mouse-enter="addOperation"
-    @select="setSelection"
-    @select-all="setSelection"
-  >
+  <el-empty v-if="recycledData.length == 0" description="暂无文件" />
+  <el-table v-else :data="recycledData" @sortable="true" sort-method="updated_at" @cell-mouse-enter="addOperation"
+    @select="setSelection" @select-all="setSelection">
     <el-table-column type="selection" width="55" />
     <el-table-column prop="name" label="Name" sortable>
       <template v-slot="scope">
@@ -26,16 +19,24 @@
           {{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'word'">
-          <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
+          <el-icon style="margin-right: 15px">
+            <Document />
+          </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'video'">
-          <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
+          <el-icon style="margin-right: 15px">
+            <VideoCamera />
+          </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'audio'">
-          <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
+          <el-icon style="margin-right: 15px">
+            <Headset />
+          </el-icon>{{ scope.row.name }}
         </div>
         <div v-else>
-          <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
+          <el-icon style="margin-right: 15px">
+            <More />
+          </el-icon>{{ scope.row.name }}
         </div>
       </template>
     </el-table-column>
@@ -45,24 +46,15 @@
         <el-button v-show="hoveredRow === row" type="danger" size="small" @click="deleteData(row)">
           彻底删除
         </el-button>
-        <el-button
-          v-show="hoveredRow === row"
-          type="primary"
-          size="small"
-          @click="restoreData(row)"
-        >
+        <el-button v-show="hoveredRow === row" type="primary" size="small" @click="restoreData(row)">
           恢复
         </el-button>
       </template>
     </el-table-column>
     <el-table-column align="right">
       <template #header>
-        <el-button v-show="selection.length > 0" type="danger" @click="deleteData(selection)"
-          >彻底删除</el-button
-        >
-        <el-button v-show="selection.length > 0" type="primary" @click="restoreData(selection)"
-          >恢复</el-button
-        >
+        <el-button v-show="selection.length > 0" type="danger" @click="deleteData(selection)">彻底删除</el-button>
+        <el-button v-show="selection.length > 0" type="primary" @click="restoreData(selection)">恢复</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -73,8 +65,8 @@ import apiClient from '@/axios'
 import { inject, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-let currentData = inject('recycledData')
-let livingData = inject('livingData')
+let recycledData = inject('recycledData')
+let formData = inject('formData')
 let selection = ref([])
 let hoveredRow = ref(null)
 
@@ -84,7 +76,7 @@ function addOperation(row) {
 }
 
 function setSelection(selected) {
-  console.log('selected', selected)
+  // console.log('selected', selected)
   selection.value = selected
 }
 
@@ -94,11 +86,11 @@ function arrangeData(data) {
   let folder_ids = []
   let attachment_ids = []
   let bin_ids = []
-  let root = livingData
-  console.log('data', data)
+  let root = formData
+  // console.log('data', data)
 
   if (Array.isArray(data)) {
-    currentData.value = currentData.value.filter((item) => !data.includes(item)) //从回收站中删除
+    recycledData.value = recycledData.value.filter((item) => !data.includes(item)) //从回收站中删除
     data.forEach((item) => {
       let newItem
 
@@ -128,8 +120,8 @@ function arrangeData(data) {
       bin_ids.push(item.id)
     })
   } else {
-    let index = currentData.value.indexOf(data)
-    currentData.value.splice(index, 1) //从回收站中删除
+    let index = recycledData.value.indexOf(data)
+    recycledData.value.splice(index, 1) //从回收站中删除
 
     if (data.type == 'folder') {
       folders.push(data)
@@ -180,7 +172,7 @@ function restoreData(data) {
       let code = response.data.code
 
       if (code == 1) {
-        livingData.value.children.push(...result[0], ...result[2])
+        formData.value.children.push(...result[0], ...result[2])
 
         ElMessage({
           message: '已恢复',
@@ -188,6 +180,7 @@ function restoreData(data) {
           plain: true
         })
       } else {
+        console.log()
       }
     })
 }

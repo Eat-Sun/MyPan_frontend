@@ -1,5 +1,5 @@
 <template>
-  <el-footer class="footer">Footer</el-footer>
+  <el-footer class="footer"></el-footer>
 </template>
 
 <script>
@@ -19,7 +19,7 @@ export default {
 }
 
 .footer {
-  background-color: #b3c0d1;
+  background-color: #ffffff;
   text-align: center;
   line-height: 40px;
   /* Adjust this value according to the actual footer height */

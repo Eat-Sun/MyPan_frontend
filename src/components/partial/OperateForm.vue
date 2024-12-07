@@ -6,12 +6,7 @@
       </el-icon>
       删除文件
     </el-button>
-    <el-button
-      v-show="showOperationButton"
-      type="primary"
-      plain
-      @click="visibleMoveFileTable = true"
-    >
+    <el-button v-show="showOperationButton" type="primary" plain @click="visibleMoveFileTable = true">
       <el-icon>
         <Delete />
       </el-icon>
@@ -71,7 +66,7 @@ export default {
     }
   },
   setup(props) {
-    const data = inject('livingData') //原始数据
+    const data = inject('formData') //原始数据
     const free_space = ref(props.free_space) //剩余空间
     const parent_folder = ref(props.parent_folder) //欲操作文件原文件夹
     const topSelectedData = toRef(props, 'topSelectedData')
@@ -86,8 +81,8 @@ export default {
     }
 
     const getFolder = computed(() => {
-      return breadcrumb.value[breadcrumb.value.length - 1].data.value.filter(
-        (item) => item.type === 'folder'
+      return breadcrumb.value[breadcrumb.value.length - 1].data.filter(item =>
+        item.type === 'folder' && item.id != topSelectedData.value.id
       )
     })
 
@@ -203,7 +198,7 @@ export default {
 
     //从原文件夹移除文件并添加至回收站
     const updateView = () => {
-      console.log('parent_folder', parent_folder.value)
+      // console.log('parent_folder', parent_folder.value)
       for (let i = parent_folder.value.data.length - 1; i >= 0; i--) {
         if (props.selectedData.includes(parent_folder.value.data[i])) {
           parent_folder.value.data.splice(i, 1)

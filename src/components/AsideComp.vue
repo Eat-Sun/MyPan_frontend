@@ -1,12 +1,7 @@
 <template>
-  <el-aside width="200px" class="aside">
-    <el-col :span="12">
-      <el-menu
-        default-active="1-1"
-        class="el-menu-vertical-demo"
-        @select="selectedSubMenu"
-        style="border-right: 10px solid #000"
-      >
+  <el-aside class="aside" style="width: 200px; overflow-x: hidden; padding-right: 0px;">
+    <el-col :span="12" style="width: 200px">
+      <el-menu style="width: 200px" default-active="1-1" class="el-menu-vertical-demo" @select="selectedSubMenu">
         <el-sub-menu index="1">
           <template #title>
             <el-icon>
@@ -15,19 +10,34 @@
             <span>我的文件</span>
           </template>
           <el-menu-item index="1-1">
-            <el-icon> <Files /> </el-icon>全部文件
+            <el-icon>
+              <Files />
+            </el-icon>全部文件
           </el-menu-item>
           <el-menu-item index="1-2">
-            <el-icon> <Picture /> </el-icon>图片
+            <el-icon>
+              <Picture />
+            </el-icon>图片
           </el-menu-item>
           <el-menu-item index="1-3">
-            <el-icon> <Document /> </el-icon>文档
+            <el-icon>
+              <Document />
+            </el-icon>文档
           </el-menu-item>
           <el-menu-item index="1-4">
-            <el-icon> <VideoCamera /> </el-icon>视频
+            <el-icon>
+              <VideoCamera />
+            </el-icon>视频
           </el-menu-item>
           <el-menu-item index="1-5">
-            <el-icon> <Headset /> </el-icon>音频
+            <el-icon>
+              <Headset />
+            </el-icon>音频
+          </el-menu-item>
+          <el-menu-item index="1-6">
+            <el-icon>
+              <Headset />
+            </el-icon>其它
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="2">
@@ -39,18 +49,33 @@
       </el-menu>
     </el-col>
   </el-aside>
+  <el-divider direction="vertical" style="height: 100%;padding-left: 0;"></el-divider>
 </template>
 
 <script>
 import apiClient from '@/axios'
 import { ElMessage } from 'element-plus'
-import { reactive, onBeforeMount } from 'vue'
+import { inject, reactive, toRef } from 'vue'
 
 export default {
+  props: {
+    data: {
+      type: JSON,
+      required: true
+    }
+  },
   emits: ['viewControl'],
   setup(props, { emit }) {
-    let recycledData = reactive([]) // 响应式数据
-    // let recycledData = reactive([
+    let data = toRef(props, 'data')
+    let classifyData = inject('classifyData')
+    let recycledData = inject('recycledData')
+
+    let pictures = reactive([])
+    let words = reactive([])
+    let videos = reactive([])
+    let audios = reactive([])
+    let others = reactive([])
+    // recycledData.value = reactive([
     //   {
     //     id: 1,
     //     mix_id: 111,
@@ -99,26 +124,67 @@ export default {
     const selectedSubMenu = async (index) => {
       switch (index) {
         case '1-1': {
-          emit('viewControl', { type: 'living', data: null })
+          emit('viewControl', 'living')
           break
         }
-        case '1-2':
-        case '1-3':
-        case '1-4':
+        case '1-2': {
+          if (pictures.length == 0) {
+            pictures = getData('picture')
+          }
+          classifyData.value = pictures
+          emit('viewControl', 'classify')
+
+          break
+        }
+        case '1-3': {
+          if (words.length == 0) {
+            words = getData('word')
+          }
+          classifyData.value = words
+          emit('viewControl', 'classify')
+
+          break
+        }
+        case '1-4': {
+          if (videos.length == 0) {
+            videos = getData('video')
+          }
+          classifyData.value = videos
+          emit('viewControl', 'classify')
+
+          break
+        }
         case '1-5': {
-          console.log('rw:', index)
+          if (audios.length == 0) {
+            audios = getData('audio')
+          }
+          classifyData.value = audios
+          emit('viewControl', 'classify')
+
+          break
+        }
+        case '1-6': {
+          if (others.length == 0) {
+            others = getData('undefined')
+          }
+          classifyData.value = others
+          emit('viewControl', 'classify')
+
           break
         }
         case '2': {
-          if (recycledData.length === 0) {
+
+          if (recycledData.value.length === 0) {
             // 异步获取回收数据
             await getRecycledData()
           }
-          console.log('recycledData', recycledData)
-          emit('viewControl', { type: 'recycled', data: recycledData })
+          console.log('recycledData', recycledData.value)
+          emit('viewControl', 'recycled')
           break
         }
       }
+
+      console.log('classifyData', classifyData.value)
     }
 
     // 获取回收数据
@@ -135,7 +201,7 @@ export default {
         if (code === 1) {
           const processed = processData(response.data.data)
           // 更新响应式数据
-          recycledData.splice(0, recycledData.length, ...processed) // 确保更新是响应式的
+          recycledData.value.splice(0, recycledData.value.length, ...processed) // 确保更新是响应式的
         } else {
           ElMessage({
             message: '获取回收文件列表失败',
@@ -160,6 +226,11 @@ export default {
         return data
       }
       return data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+    }
+
+    // 分类
+    const getData = (type) => {
+      return data.value[1].filter(item => item.type == type)
     }
 
     return {

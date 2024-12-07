@@ -2,7 +2,7 @@
   <el-container class="full-height-container">
     <HeadComp :list="uploadList" :free_space="freeSpace" />
     <el-container>
-      <AsideComp @viewControl="setView" />
+      <AsideComp @viewControl="setView" :data="data" :formData="formData" />
       <el-container>
         <MainComp :upload_list="uploadList" :free_space="freeSpace" :operate_view="view" />
       </el-container>
@@ -22,18 +22,7 @@ import apiClient from '@/axios'
 
 export default {
   beforeRouteLeave(to, from, next) {
-    console.log('触发1：', this.livingData)
-    const url = apiClient.defaults.baseURL + '/api/v1/sessions/quit'
-    const formData = new FormData()
-    formData.append('token', localStorage.getItem('token'))
-    formData.append(
-      'data',
-      JSON.stringify({
-        folder_data: this.livingData,
-        free_space: Number(this.freeSpace)
-      })
-    )
-    navigator.sendBeacon(url, formData)
+    this.quitLogin()
 
     next()
   },
@@ -46,39 +35,25 @@ export default {
   setup() {
     const route = useRoute()
     const data = ref([])
-    const livingData = ref([])
+    const formData = ref({})
+    const classifyData = ref([])
     const recycledData = ref([])
     const view = ref('living')
-    const freeSpace = ref([])
+    const freeSpace = ref('')
     const uploadList = ref([])
-    provide('livingData', livingData)
+
+    provide('classifyData', classifyData)
     provide('recycledData', recycledData)
+    provide('formData', formData)
+    provide('uploadList', uploadList)
 
     onBeforeMount(() => {
-      // console.log("父组件触发dataInFolderData")
-      console.log('route.query.folder_data', route.query.folder_data)
-      if (Array.isArray(route.query.folder_data)) {
-        livingData.value = processData(route.query.folder_data)
-      } else {
-        livingData.value = route.query.folder_data
-      }
+      data.value = route.query.form_data
+      // console.log('data.value', data.value)
+      formData.value = processData(JSON.parse(JSON.stringify(data.value)))
       freeSpace.value = route.query.free_space
-      // console.log("freeSpace", freeSpace.value)
 
-      window.addEventListener('unload', () => {
-        const url = apiClient.defaults.baseURL + '/api/v1/sessions/quit'
-        const formData = new FormData()
-        formData.append('token', localStorage.getItem('token'))
-        formData.append(
-          'data',
-          JSON.stringify({
-            folder_data: livingData.value,
-            free_space: Number(freeSpace.value)
-          })
-        )
-
-        navigator.sendBeacon(url, formData)
-      })
+      window.addEventListener('unload', quitLogin())
     })
 
     const processData = (data) => {
@@ -108,20 +83,41 @@ export default {
       return root
     }
 
-    const setView = (operate) => {
-      if (operate.type == 'recycled') {
-        recycledData.value = operate.data
-      }
-      view.value = operate.type
+    const setView = (change) => {
+      // if (operate.type == 'recycled') {
+      //   recycledData.value = operate.data
+      // } else {
+      // }
+      // view.value = operate.type
       // console.log('设置数据', data.value, view.value)
+      view.value = change
+      console.log('设置数据', view.value)
+    }
+
+    const quitLogin = () => {
+      const url = apiClient.defaults.baseURL + '/api/v1/sessions/quit'
+      const formData = new FormData()
+      // console.log('quit', data.value)
+      formData.append('token', localStorage.getItem('token'))
+      formData.append(
+        'userData',
+        JSON.stringify({
+          form_data: data.value,
+          free_space: Number(freeSpace.value)
+        })
+      )
+
+      navigator.sendBeacon(url, formData)
     }
 
     return {
+      data,
       view,
       setView,
       uploadList,
+      formData,
       freeSpace,
-      livingData
+      quitLogin
     }
   }
 }
