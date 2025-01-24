@@ -1,9 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginForm from '../views/LoginForm.vue'
 import HomePage from '../views/HomePage.vue'
-import apiClient from '@/axios'
 import { ElMessage } from 'element-plus'
-// import { useRouter } from 'vue-router'
 
 const routes = [
   { path: '/', redirect: '/login' }, // 默认路由重定向到 /login
@@ -13,36 +11,21 @@ const routes = [
     name: 'HomePage',
     component: HomePage,
     beforeEnter(to, from, next) {
-      apiClient
-        .get('/api/v1/user_data/getter', {
-          params: {
-            token: localStorage.getItem('token')
-          }
-        })
-        .then((response) => {
-          let code = response.data.code
-
-          if (code == 1) {
-            let data = response.data.data
-            console.log('data', data)
-            to.query.form_data = data.form_data
-            to.query.free_space = data.free_space
-
-            next()
-          } else {
-            next(
-              { name: 'LoginForm' },
-              ElMessage({
-                message: '未登陆',
-                type: 'error',
-                plain: true
-              })
-            )
-          }
-        })
+      if (sessionStorage.getItem('user_data') == null) {
+        next(
+          { name: 'LoginForm' },
+          ElMessage({
+            message: '未登陆',
+            type: 'error',
+            plain: true
+          })
+        )
+      } else {
+        next()
+      }
     }
     // beforeEnter(to, from, next) {
-    //   to.query.form_data = [
+    //   let form_data = [
     //     [
     //       {
     //         id: 1,
@@ -128,7 +111,13 @@ const routes = [
     //       }
     //     ]
     //   ]
-    //   to.query.free_space = '1024'
+    //   let free_space = '10240000000'
+
+    //   let user_data = {
+    //     form_data: form_data,
+    //     free_space: free_space
+    //   }
+    //   to.query.user_data = JSON.stringify(user_data)
 
     //   next()
     // }

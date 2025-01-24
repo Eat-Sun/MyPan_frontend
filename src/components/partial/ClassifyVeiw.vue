@@ -1,5 +1,6 @@
 <template>
-  <el-table :data="classifyData" @selection-change="selection" @select="setSelection" @select-all="setSelection">
+  <el-empty v-if="classifyData.length == 0" description="暂无文件" />
+  <el-table v-else ref="tableRef" :data="classifyData" @selection-change="setSelection" @select-all="setSelection">
     <el-table-column type="selection" width="55" />
     <el-table-column prop="name" label="Name">
       <template v-slot="scope">
@@ -43,21 +44,16 @@
 </template>
 
 <script setup>
-import { inject, toRef } from 'vue';
+import { inject, ref } from 'vue';
 
-const props = defineProps({
-  selectedData: {
-    type: Array,
-    required: true
-  }
-})
 const emit = defineEmits(['selected']);
+const tableRef = ref()
 
-let selection = toRef(props, 'selectedData')
+// let selection = toRef(props, 'selectedData')
 let classifyData = inject('classifyData')
 
-function setSelection(selected) {
-  emit('selected', selected)
+function setSelection() {
+  emit('selected', tableRef.value.getSelectionRows())
   // console.log('selection', selection)
 }
 </script>

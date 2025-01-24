@@ -40,34 +40,22 @@
   </el-drawer>
 </template>
 
-<script>
-import { ref } from 'vue'
+<script setup>
+import { ref, toRef } from 'vue'
 
-export default {
-  props: {
-    list: {
-      type: Array,
-      required: false
-    },
-    free_space: {
-      required: true
-    }
+const props = defineProps({
+  list: {
+    type: Array,
+    required: false
   },
-  setup(props) {
-    const uploadList = ref(props.list)
-    const freeSpace = ref(props.free_space)
-    const currentFolder = ref()
-
-    const uploadListVisible = ref(false)
-
-    return {
-      uploadList,
-      freeSpace,
-      currentFolder,
-      uploadListVisible
-    }
+  free_space: {
+    required: true
   }
-}
+})
+const uploadList = toRef(props, 'list')
+const freeSpace = toRef(props, 'free_space')
+
+const uploadListVisible = ref(false)
 </script>
 
 <style>

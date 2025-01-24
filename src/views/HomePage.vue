@@ -2,125 +2,64 @@
   <el-container class="full-height-container">
     <HeadComp :list="uploadList" :free_space="freeSpace" />
     <el-container>
-      <AsideComp @viewControl="setView" :data="data" :formData="formData" />
+      <AsideComp @viewControl="setView" :data="data" />
       <el-container>
-        <MainComp :upload_list="uploadList" :free_space="freeSpace" :operate_view="view" />
+        <Suspense>
+          <MainComp :upload_list="uploadList" :free_space="freeSpace" :operate_view="view" :form_data="formData" />
+        </Suspense>
       </el-container>
     </el-container>
     <FootComp />
   </el-container>
 </template>
 
-<script>
-import { ref, onBeforeMount, provide } from 'vue'
-import { useRoute } from 'vue-router'
+<script setup>
+import { ref, onBeforeMount, provide, reactive } from 'vue'
 import HeadComp from '@/components/HeadComp.vue'
 import AsideComp from '@/components/AsideComp.vue'
 import MainComp from '@/components/MainComp.vue'
 import FootComp from '@/components/FootComp.vue'
-import apiClient from '@/axios'
+import { processData } from '@/utils'
+import { onBeforeRouteLeave } from 'vue-router'
+import { useDataStore } from '@/stores/data'
 
-export default {
-  beforeRouteLeave(to, from, next) {
-    this.quitLogin()
+let dataStore = useDataStore()
+onBeforeRouteLeave((to, from, next) => {
+  dataStore.resetStore()
+  next();
+});
 
-    next()
-  },
-  components: {
-    HeadComp,
-    AsideComp,
-    MainComp,
-    FootComp
-  },
-  setup() {
-    const route = useRoute()
-    const data = ref([])
-    const formData = ref({})
-    const classifyData = ref([])
-    const recycledData = ref([])
-    const view = ref('living')
-    const freeSpace = ref('')
-    const uploadList = ref([])
+const data = reactive({
+  folders: [],
+  attachments: []
+})
+let formData
+const freeSpace = ref('')
+const classifyData = ref([])
+const view = ref('living')
 
-    provide('classifyData', classifyData)
-    provide('recycledData', recycledData)
-    provide('formData', formData)
-    provide('uploadList', uploadList)
+const uploadList = ref([])
 
-    onBeforeMount(() => {
-      data.value = route.query.form_data
-      // console.log('data.value', data.value)
-      formData.value = processData(JSON.parse(JSON.stringify(data.value)))
-      freeSpace.value = route.query.free_space
+provide('originData', data)
+provide('classifyData', classifyData)
+provide('uploadList', uploadList)
 
-      window.addEventListener('unload', quitLogin())
-    })
+onBeforeMount(() => {
+  const user_data = JSON.parse(sessionStorage.getItem('user_data'))
+  data.folders = user_data.form_data.folders
+  data.attachments = user_data.form_data.attachments
+  formData = processData(data)
+  freeSpace.value = user_data.free_space
+  // console.log('data', data)
+  // console.log('formData', formData.value)
+  sessionStorage.removeItem('user_data')
+})
 
-    const processData = (data) => {
-      // console.log(data)
-      let stack = []
-      let folders = data[0]
-      let attachments = data[1]
-      let root = folders.find((item) => item.ancestry == null)
-
-      stack.push(root)
-
-      while (stack.length > 0) {
-        let folder = stack.pop()
-
-        let subFolders = folders.filter((item) => item.ancestry == folder.numbering)
-        let subAttachments = attachments.filter((item) => item.folder_id == folder.id)
-        // console.log("subFolders", subFolders)
-        if (subFolders && subFolders.length > 0) {
-          folder.children.push(...subFolders)
-          stack.push(...subFolders)
-        }
-        if (subAttachments && subAttachments.length > 0) {
-          folder.children.push(...subAttachments)
-        }
-      }
-
-      return root
-    }
-
-    const setView = (change) => {
-      // if (operate.type == 'recycled') {
-      //   recycledData.value = operate.data
-      // } else {
-      // }
-      // view.value = operate.type
-      // console.log('设置数据', data.value, view.value)
-      view.value = change
-      console.log('设置数据', view.value)
-    }
-
-    const quitLogin = () => {
-      const url = apiClient.defaults.baseURL + '/api/v1/sessions/quit'
-      const formData = new FormData()
-      // console.log('quit', data.value)
-      formData.append('token', localStorage.getItem('token'))
-      formData.append(
-        'userData',
-        JSON.stringify({
-          form_data: data.value,
-          free_space: Number(freeSpace.value)
-        })
-      )
-
-      navigator.sendBeacon(url, formData)
-    }
-
-    return {
-      data,
-      view,
-      setView,
-      uploadList,
-      formData,
-      freeSpace,
-      quitLogin
-    }
-  }
+const setView = (change) => {
+  view.value = change
+  console.log('设置数据', view.value)
 }
+
 </script>
 
 <style scoped>

@@ -24,10 +24,11 @@
           <el-input v-model="registerForm.user.email" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="密码" :label-width="registerForm.formLabelWidth" prop="password">
-          <el-input v-model="registerForm.user.password" autocomplete="off"></el-input>
+          <el-input type="password" v-model="registerForm.user.password" autocomplete="off" show-password />
         </el-form-item>
         <el-form-item label="确认密码" :label-width="registerForm.formLabelWidth" prop="password_confirmation">
-          <el-input v-model="registerForm.user.password_confirmation" autocomplete="off"></el-input>
+          <el-input type="password" v-model="registerForm.user.password_confirmation" autocomplete="off"
+            show-password />
         </el-form-item>
       </el-form>
     </template>
@@ -46,7 +47,7 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import apiClient from '@/axios';
+import { apiClient } from '@/utils';
 
 export default {
   setup() {
@@ -71,10 +72,11 @@ export default {
 
     const username_rule = (rule, value, callback) => {
       const { username } = registerForm.user;
+      console.log("username", username)
       if (username == '') {
         callback(new Error('用户名不能为空'))
       } else {
-        if (username.length > 5 && username.length < 10) {
+        if (username.length < 6 || username.length > 10) {
           callback(new Error('用户名长度为6~10位'))
         }
       }
@@ -146,16 +148,18 @@ export default {
           const code = response.data.code;
 
           if (code == 1) {
-            const token = response.data.data.token;
-            // const dataInFolderData = response.data.data.folder_data
-            localStorage.setItem('token', token);
+            const token = response.data.data.token
+            const user_data = response.data.data.user_data
 
+            localStorage.setItem('token', token)
+            sessionStorage.setItem('user_data', JSON.stringify(user_data));
             ElMessage({
               message: '登陆成功',
               type: 'success',
               plain: true,
             })
-            router.push({ name: 'HomePage' });
+
+            router.push('/homepage')
           } else {
             const message = response.data.message
 

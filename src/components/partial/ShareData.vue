@@ -84,9 +84,9 @@
 </template>
 
 <script>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, inject } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import apiClient from '@/axios';
+import { apiClient } from '@/utils';
 
 export default {
   name: 'ShareData',
@@ -105,7 +105,7 @@ export default {
     }
   },
   setup(props) {
-    const root = ref(props.Data)
+    const root = inject('breadcrumb')[0]
     // console.log("props.data", props.Data)
 
     const token = localStorage.getItem('token')
@@ -213,7 +213,7 @@ export default {
       let folders = data[0]
       let attachments = data[1]
 
-      stack.push(root.value)
+      stack.push(root)
 
       while (stack.length > 0) {
         let folder = stack.pop()
@@ -288,7 +288,6 @@ export default {
 
     const change_shareList = (selectedData) => {
       // console.log("1111111111111")
-
       shareList.value = selectedData
     }
 

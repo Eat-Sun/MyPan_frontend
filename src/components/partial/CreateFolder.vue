@@ -7,38 +7,26 @@
   </el-button>
 </template>
 
-<script>
-import { ref, watch } from 'vue';
-export default {
-  props: {
-    parent_folder: {
-      type: Object,
-      required: true
-    }
-  },
-  setup(props) {
-    const parent_folder = ref(props.parent_folder);
+<script setup>
+import { inject } from 'vue';
 
-    // 添加文件夹
-    const addFolder = () => {
-      parent_folder.value.data.push({
-        id: '',
-        type: 'folder',
-        name: '',
-        numbering: '',
-        ancestry: '',
-        children: [],
-        editing: true
-      })
-      // console.log("newFolder", newFolder)
-      // console.log("parent_folder:", parent_folder.value)
-    }
+const parent_folder = inject('parentFolder')
+const originData = inject('originData')
 
-    watch(() => props.parent_folder, () => { parent_folder.value = props.parent_folder })
-
-    return {
-      addFolder
-    }
+// 添加文件夹
+const addFolder = () => {
+  let newFolder = {
+    id: '',
+    type: 'folder',
+    name: '',
+    numbering: '',
+    ancestry: '',
+    children: [],
+    editing: true
   }
+  parent_folder.value.children.push(newFolder)
+  originData.folders.push(newFolder)
+  // console.log("newFolder", newFolder)
+  // console.log("parent_folder:", parent_folder.value)
 }
 </script>

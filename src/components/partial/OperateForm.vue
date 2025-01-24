@@ -41,7 +41,8 @@
 <script>
 import { computed, inject, ref, watch, toRef } from 'vue'
 import { ElMessage } from 'element-plus'
-import apiClient from '@/axios'
+import { apiClient, processAddBinData } from '@/utils'
+// import { useDataStore } from '@/stores/data';
 
 export default {
   name: 'OperateForm',
@@ -62,34 +63,39 @@ export default {
       required: true
     },
     recycledData: {
-      type: Array
+      type: Object
     }
   },
   setup(props) {
-    const data = inject('formData') //原始数据
-    const free_space = ref(props.free_space) //剩余空间
-    const parent_folder = ref(props.parent_folder) //欲操作文件原文件夹
+    const originData = inject('originData') //原始数据
+    const free_space = toRef(props, 'free_space') //剩余空间
+    const parent_folder = toRef(props, 'parent_folder') //欲操作文件原文件夹
     const topSelectedData = toRef(props, 'topSelectedData')
-    const recycledData = toRef(props, 'recycledData')
-    const breadcrumb = ref([{ id: data.value.id, name: 'root', data: data.value.children }]) //移动文件时的目标文件夹路径
+    const binRoot = inject('binBreadcrumb')[0]
+    console.log("222222222", inject('binBreadcrumb'))
+    // const dataStore = useDataStore()
+    // const recycledData = toRef(props, 'recycledData')
+    // const recycledData = dataStore.getRecycledData()
+
+    const moveBreadcrumb = inject('moveBreadcrumb') //移动文件时的目标文件夹路径
     const showOperationButton = ref(false)
     const visibleMoveFileTable = ref(false)
 
     const navigateTo = (index) => {
-      breadcrumb.value = breadcrumb.value.slice(0, index + 1)
+      moveBreadcrumb.splice(0, moveBreadcrumb.length, ...moveBreadcrumb.slice(0, index + 1));
       // console.log("breadcrumb.value:", breadcrumb.value)
     }
 
     const getFolder = computed(() => {
-      return breadcrumb.value[breadcrumb.value.length - 1].data.filter(item =>
-        item.type === 'folder' && item.id != topSelectedData.value.id
+      return moveBreadcrumb[moveBreadcrumb.length - 1].children.filter(item =>
+        item.type === 'folder' && !topSelectedData.value.includes(item)
       )
     })
 
     const handleRowClick = (row) => {
       // console.log("now", row)
       if (row.name != 'root') {
-        breadcrumb.value.push({ id: row.id, name: row.name, data: row.children })
+        moveBreadcrumb.push(row)
       }
     }
 
@@ -104,44 +110,51 @@ export default {
 
     // 删除文件
     const deleteSelected = () => {
-      let mixed = []
+      // console.log("selectedData", props.selectedData)
       let folder_ids = []
       let attachment_ids = []
+      let opt = []
 
       props.selectedData.forEach((item) => {
-        let new_item = {
-          mix_id: item.id,
-          name: item.name,
-          type: item.type
-        }
-        if ('b2_key' in item) {
-          attachment_ids.push(item.id)
-          new_item.b2_key = item.b2_key
-          new_item.byte_size = item.size
-        } else {
+        if (item.type == 'folder') {
           folder_ids.push(item.id)
-          new_item.numbering = item.numbering
+        } else {
+          attachment_ids.push(item.id)
         }
-        mixed.push(new_item)
+
+        if (topSelectedData.value.includes(item)) {
+          opt.push({
+            mix_id: item.id,
+            type: item.type,
+            is_top: true
+          })
+        } else {
+          opt.push({
+            mix_id: item.id,
+            type: item.type,
+            is_top: false
+          })
+        }
 
         free_space.value -= item.size
       })
-      // console.log('mixed', mixed)
       // console.log('folder_ids', folder_ids)
       // console.log('attachment_ids', attachment_ids)
+      // console.log('opt', opt)
       apiClient
         .post('/api/v1/recycle_bins/recycle', {
           token: localStorage.getItem('token'),
-          mixed: mixed,
           folder_ids: folder_ids,
-          attachment_ids: attachment_ids
+          attachment_ids: attachment_ids,
+          opt: opt
         })
         .then((response) => {
           const code = response.data.code
-          // console.log("code:", code)
+          // 
           if (code == 1) {
-            updateView()
-
+            let result = response.data.data
+            // console.log("result", result)
+            updateViewAfterDelete(result)
             ElMessage({
               message: '删除成功',
               type: 'success',
@@ -162,20 +175,30 @@ export default {
 
     // 移动文件
     const moveSelected = () => {
-      let targetMenuId = breadcrumb.value[breadcrumb.value.length - 1].id
-
+      let targetFolderNumbering = moveBreadcrumb[moveBreadcrumb.length - 1].numbering
+      let folder_ids = []
+      let attachment_ids = []
+      topSelectedData.value.forEach(item => {
+        if (item.type == 'folder') {
+          folder_ids.push(item.id)
+        } else {
+          attachment_ids.push(item.id)
+        }
+      })
+      // console.log(targetFolderNumbering)
+      // console.log(folder_ids)
+      // console.log(attachment_ids)
       apiClient
         .post('/api/v1/user_data/mover', {
           token: localStorage.getItem('token'),
-          data: {
-            filelist: props.selectedData,
-            target_folder_id: targetMenuId
-          }
+          target_folder_numbering: targetFolderNumbering,
+          folder_ids: folder_ids,
+          attachment_ids: attachment_ids
         })
         .then((response) => {
-          const code = response.data.value.code
+          const code = response.data.code
           if (code == 1) {
-            updateRootData()
+            updateViewAfterMove()
 
             ElMessage({
               message: '移动成功',
@@ -184,7 +207,7 @@ export default {
             })
           } else {
             ElMessage({
-              message: '移动失败' + response.data.value.exception || '',
+              message: '移动失败' + response.data.exception || '',
               type: 'error',
               plain: true
             })
@@ -197,37 +220,47 @@ export default {
     }
 
     //从原文件夹移除文件并添加至回收站
-    const updateView = () => {
-      // console.log('parent_folder', parent_folder.value)
-      for (let i = parent_folder.value.data.length - 1; i >= 0; i--) {
-        if (props.selectedData.includes(parent_folder.value.data[i])) {
-          parent_folder.value.data.splice(i, 1)
-        }
-      }
-      recycledData.value.push(...topSelectedData.value)
+    const updateViewAfterDelete = async (response) => {
+      console.log('parent_folder.value', parent_folder.value)
+      parent_folder.value.children = parent_folder.value.children.filter(item => !props.selectedData.includes(item))
+      originData.attachments = originData.attachments.filter(item => !props.selectedData.includes(item))
+      originData.folders = originData.folders.filter(item => !props.selectedData.includes(item))
+      console.log('originData', originData)
+      console.log('parent_folder.value', parent_folder.value)
+      let need_to_add = processAddBinData(JSON.parse(JSON.stringify(topSelectedData.value)), response)
+      // console.log('need_to_add', need_to_add)
+      binRoot.children.push(...need_to_add)
+      // recycledData.value.folders.push(...need_to_add.folders)
+      // recycledData.value.attachments.push(...need_to_add.attachments)
+
+      // console.log('recycledData', recycledData.value)
     }
 
-    //更新视图
-    const updateRootData = () => {
-      // console.log(origin_folder.value)
-      const target_folder = ref(breadcrumb.value[breadcrumb.value.length - 1])
-      let need_to_add = props.selectedData.filter((item) =>
-        parent_folder.value.children.includes(item)
-      )
+    //从原文件夹移除文件并添加至新文件夹
+    const updateViewAfterMove = () => {
+      console.log("topSelectedData.value", topSelectedData.value)
+      console.log("parent_folder.value", parent_folder.value)
+      parent_folder.value.children = parent_folder.value.children.filter(item => !topSelectedData.value.includes(item))
 
-      target_folder.value.data.value.push(...need_to_add)
-      updateView()
+      let target_folder = moveBreadcrumb[moveBreadcrumb.length - 1]
+      console.log("target_folder", target_folder)
+      target_folder.children.push(...topSelectedData.value)
     }
 
     watch(() => props.selectedData, changeOperationButton, { deep: true })
     watch(
-      () => props.parent_folder,
+      () => parent_folder,
       () => {
-        parent_folder.value = props.parent_folder
-      }
+        console.log("parent_folder", parent_folder.value)
+        // parent_folder.value = props.parent_folder
+      },
+      { deep: true }
     )
+    // watch(() => originData.folders, () => {
+    //   formData = processData(originData)
+    // }, { deep: true })
     return {
-      breadcrumb,
+      breadcrumb: moveBreadcrumb,
       navigateTo,
       getFolder,
       handleRowClick,

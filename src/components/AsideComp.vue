@@ -36,7 +36,7 @@
           </el-menu-item>
           <el-menu-item index="1-6">
             <el-icon>
-              <Headset />
+              <More />
             </el-icon>其它
           </el-menu-item>
         </el-sub-menu>
@@ -53,9 +53,8 @@
 </template>
 
 <script>
-import apiClient from '@/axios'
-import { ElMessage } from 'element-plus'
-import { inject, reactive, toRef } from 'vue'
+import { useDataStore } from '@/stores/data';
+import { inject, ref, toRef, watch } from 'vue'
 
 export default {
   props: {
@@ -67,58 +66,126 @@ export default {
   emits: ['viewControl'],
   setup(props, { emit }) {
     let data = toRef(props, 'data')
+    let type = ref('')
+    let dataStore = useDataStore()
     let classifyData = inject('classifyData')
-    let recycledData = inject('recycledData')
-
-    let pictures = reactive([])
-    let words = reactive([])
-    let videos = reactive([])
-    let audios = reactive([])
-    let others = reactive([])
-    // recycledData.value = reactive([
-    //   {
-    //     id: 1,
-    //     mix_id: 111,
-    //     type: 'folder',
-    //     name: 'Folder1_1_sub1',
-    //     b2_key: null
-    //   },
-    //   {
-    //     id: 2,
-    //     mix_id: 112,
-    //     type: 'folder',
-    //     name: 'Folder1_1_sub2',
-    //     b2_key: null
-    //   },
-    //   {
-    //     id: 3,
-    //     mix_id: 1111,
-    //     type: 'undefined',
-    //     name: 'att111_1',
-    //     b2_key: 'vW34xY'
-    //   },
-    //   {
-    //     id: 4,
-    //     mix_id: 1112,
-    //     type: 'word',
-    //     name: 'att111_2',
-    //     b2_key: 'zA56bC'
-    //   },
-    //   {
-    //     id: 5,
-    //     mix_id: 1121,
-    //     type: 'undefined',
-    //     name: 'att112_1',
-    //     b2_key: 'Ag3Wg1'
-    //   },
-    //   {
-    //     id: 6,
-    //     mix_id: 1122,
-    //     type: 'word',
-    //     name: 'att112_2',
-    //     b2_key: 'zB56dE'
-    //   }
-    // ])
+    let recycledData = dataStore.getRecycledData()
+    // recycledData.value = [
+    //   [
+    //     {
+    //       "id": 1,
+    //       "mix_id": 11,
+    //       "type": "folder",
+    //       "name": "Folder1_1",
+    //       "numbering": "1_brni",
+    //       "ancestry": "1_niqw",
+    //       "is_top": true,
+    //       "children": []
+    //     },
+    //     {
+    //       "id": 2,
+    //       "mix_id": 111,
+    //       "type": "folder",
+    //       "name": "Folder1_1_sub1",
+    //       "numbering": "1_yptc",
+    //       "ancestry": "1_brni",
+    //       "is_top": false,
+    //       "children": []
+    //     },
+    //     {
+    //       "id": 3,
+    //       "mix_id": 112,
+    //       "type": "folder",
+    //       "name": "Folder1_1_sub2",
+    //       "numbering": "1_rwvh",
+    //       "ancestry": "1_brni",
+    //       "is_top": false,
+    //       "children": []
+    //     },
+    //     {
+    //       "id": 4,
+    //       "mix_id": 13,
+    //       "type": "folder",
+    //       "name": "Recycled1_3",
+    //       "numbering": "1_hgux",
+    //       "ancestry": "1_niqw",
+    //       "is_top": true,
+    //       "children": []
+    //     },
+    //     {
+    //       "id": 5,
+    //       "mix_id": 131,
+    //       "type": "folder",
+    //       "name": "Recycled1_3_1",
+    //       "numbering": "1_tmaq",
+    //       "ancestry": "1_hgux",
+    //       "is_top": false,
+    //       "children": []
+    //     }
+    //   ],
+    //   [
+    //     {
+    //       "id": 14,
+    //       "mix_id": 11,
+    //       "folder_id": 1,
+    //       "type": "picture",
+    //       "name": "att1_1",
+    //       "b2_key": "wvWE20",
+    //       "size": "186154",
+    //       "is_top": true
+    //     },
+    //     {
+    //       "id": 9,
+    //       "mix_id": 112,
+    //       "folder_id": 11,
+    //       "type": "picture",
+    //       "name": "att11_2",
+    //       "b2_key": "jK78lM",
+    //       "size": "307200",
+    //       "is_top": false
+    //     },
+    //     {
+    //       "id": 10,
+    //       "mix_id": 1111,
+    //       "folder_id": 111,
+    //       "type": "undefined",
+    //       "name": "att111_1",
+    //       "b2_key": "vW34xY",
+    //       "size": "256000",
+    //       "is_top": false
+    //     },
+    //     {
+    //       "id": 11,
+    //       "mix_id": 1112,
+    //       "folder_id": 111,
+    //       "type": "word",
+    //       "name": "att111_2",
+    //       "b2_key": "zA56bC",
+    //       "size": "768000",
+    //       "is_top": false
+    //     },
+    //     {
+    //       "id": 12,
+    //       "mix_id": 1121,
+    //       "folder_id": 112,
+    //       "type": "undefined",
+    //       "name": "att112_1",
+    //       "b2_key": "Ag3Wg1",
+    //       "size": "189641",
+    //       "is_top": false
+    //     },
+    //     {
+    //       "id": 13,
+    //       "mix_id": 1122,
+    //       "folder_id": 112,
+    //       "type": "word",
+    //       "name": "att112_2",
+    //       "b2_key": "zB56dE",
+    //       "size": "168198",
+    //       "is_top": false
+    //     }
+    //   ]
+    // ]
 
     // 处理选择的子菜单
     const selectedSubMenu = async (index) => {
@@ -128,110 +195,101 @@ export default {
           break
         }
         case '1-2': {
-          if (pictures.length == 0) {
-            pictures = getData('picture')
-          }
-          classifyData.value = pictures
+          type.value = 'picture'
+          // classifyData.value = pictures.value
           emit('viewControl', 'classify')
 
           break
         }
         case '1-3': {
-          if (words.length == 0) {
-            words = getData('word')
-          }
-          classifyData.value = words
+          type.value = 'word'
+          // classifyData.value = words.value
           emit('viewControl', 'classify')
 
           break
         }
         case '1-4': {
-          if (videos.length == 0) {
-            videos = getData('video')
-          }
-          classifyData.value = videos
+          type.value = 'video'
+          // classifyData.value = videos.value
           emit('viewControl', 'classify')
 
           break
         }
         case '1-5': {
-          if (audios.length == 0) {
-            audios = getData('audio')
-          }
-          classifyData.value = audios
+          type.value = 'audio'
+          // classifyData.value = audios.value
           emit('viewControl', 'classify')
 
           break
         }
         case '1-6': {
-          if (others.length == 0) {
-            others = getData('undefined')
-          }
-          classifyData.value = others
+          type.value = 'undefined'
+          // classifyData.value = others.value
           emit('viewControl', 'classify')
 
           break
         }
         case '2': {
-
-          if (recycledData.value.length === 0) {
-            // 异步获取回收数据
-            await getRecycledData()
-          }
-          console.log('recycledData', recycledData.value)
+          // if (recycledData.folders.length === 0 || recycledData.attachments.length === 0) {
+          //   // 异步获取回收数据
+          //   let result = await getRecycledData()
+          //   recycledData.folders = result.folders
+          //   recycledData.attachments = result.attachments
+          //   console.log("触发")
+          // }
+          console.log('recycledData', recycledData)
           emit('viewControl', 'recycled')
           break
         }
       }
-
-      console.log('classifyData', classifyData.value)
     }
-
     // 获取回收数据
-    const getRecycledData = async () => {
-      try {
-        const response = await apiClient.get('/api/v1/recycle_bins/getter', {
-          params: {
-            token: localStorage.getItem('token')
-          }
-        })
+    // const getRecycledData = async () => {
+    //   try {
+    //     const response = await apiClient.get('/api/v1/recycle_bins/getter', {
+    //       params: {
+    //         token: localStorage.getItem('token')
+    //       }
+    //     })
 
-        let code = response.data.code
+    //     let code = response.data.code
 
-        if (code === 1) {
-          const processed = processData(response.data.data)
-          // 更新响应式数据
-          recycledData.value.splice(0, recycledData.value.length, ...processed) // 确保更新是响应式的
-        } else {
-          ElMessage({
-            message: '获取回收文件列表失败',
-            type: 'error',
-            plain: true
-          })
-        }
-      } catch (error) {
-        ElMessage({
-          message: '请求失败，请稍后重试',
-          type: 'error',
-          plain: true
-        })
-        console.error(error)
-      }
-    }
-
+    //     if (code === 1) {
+    //       const processed = processData(response.data.data)
+    //       // 更新响应式数据
+    //       recycledData.value.splice(0, recycledData.value.length, ...processed) // 确保更新是响应式的
+    //     } else {
+    //       ElMessage({
+    //         message: '获取回收文件列表失败',
+    //         type: 'error',
+    //         plain: true
+    //       })
+    //     }
+    //   } catch (error) {
+    //     ElMessage({
+    //       message: '请求失败，请稍后重试',
+    //       type: 'error',
+    //       plain: true
+    //     })
+    //     console.error(error)
+    //   }
+    // }
     // 处理回收数据排序
-    const processData = (data) => {
-      if (data.length < 2) {
-        // console.log("Data is too short, returning as is");
-        return data
-      }
-      return data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-    }
-
+    // const processData = (data) => {
+    //   if (data.length < 2) {
+    //     return data
+    //   }
+    //   return data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+    // }
     // 分类
     const getData = (type) => {
-      return data.value[1].filter(item => item.type == type)
+      return data.value.attachments.filter(item => item.type == type)
     }
+
+    watch([type, data], () => {
+      // console.log("type",type.value)
+      classifyData.value = getData(type.value);
+    }, { deep: true });
 
     return {
       recycledData,

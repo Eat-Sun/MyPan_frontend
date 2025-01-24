@@ -45,7 +45,7 @@
 import { reactive, ref, onMounted, toRef, inject } from 'vue'
 import { throttle } from 'lodash'
 import { ElMessage } from 'element-plus'
-import apiClient from '@/axios'
+import { apiClient } from '@/utils'
 
 export default {
   name: 'UploadAndDownloadForm',
@@ -67,10 +67,11 @@ export default {
   },
   setup(props) {
     const parent_folder = toRef(props, 'parent_folder')
+    const originData = inject('originData')
     const selectedData = toRef(props, 'selectedData')
     const uploadList = inject('uploadList') //进度列表
     const consumer = props.consumer
-    const freeSpace = ref(props.free_space)
+    const freeSpace = toRef(props, 'free_space')
     // console.log('parent_folder', parent_folder.value)
     let channel = null
     const dialogFormVisible = ref(false)
@@ -147,11 +148,11 @@ export default {
     const createChunks = async (fileList) => {
       let chunks = reactive([]) // 记录每一个文件的分片
       const chunkSize = 1024 * 1024 * 5 // 5MB
-      // const chunkSize = 1024; // 1KB
 
       const processFile = (file) => {
         return new Promise((resolve) => {
           const reader = new FileReader()
+          reader.readAsDataURL(file.raw) // 读取文件
 
           reader.onload = (event) => {
             const base64_file = event.target.result.split(',')[1] // 获取文件base64编码
@@ -176,14 +177,10 @@ export default {
                 chunkIndex: i + 1,
                 chunk: chunk
               }
-
               tmpChunks.push(data)
             }
-
             resolve(tmpChunks)
           }
-
-          reader.readAsDataURL(file.raw) // 读取文件
         })
       }
 
@@ -230,18 +227,20 @@ export default {
       let index = uploadList.value.findIndex((item) => item.b2_key === file.b2_key)
 
       if (index > -1) {
+        // console.log(file.percentage)
         uploadList.value[index].percentage = file.percentage
       } else {
         uploadList.value.push(file)
       }
-    }, 1000)
+    }, 100)
 
     //更新视图
     const updateView = (file) => {
-      if (parent_folder.value.data.includes(file)) {
+      if (parent_folder.value.children.includes(file)) {
         return
       } else {
-        parent_folder.value.data.push(file)
+        parent_folder.value.children.push(file)
+        originData.attachments.push(file)
       }
     }
 
