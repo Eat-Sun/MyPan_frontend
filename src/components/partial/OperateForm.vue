@@ -6,7 +6,12 @@
       </el-icon>
       删除文件
     </el-button>
-    <el-button v-show="showOperationButton" type="primary" plain @click="visibleMoveFileTable = true">
+    <el-button
+      v-show="showOperationButton"
+      type="primary"
+      plain
+      @click="visibleMoveFileTable = true"
+    >
       <el-icon>
         <Delete />
       </el-icon>
@@ -72,23 +77,19 @@ export default {
     const parent_folder = toRef(props, 'parent_folder') //欲操作文件原文件夹
     const topSelectedData = toRef(props, 'topSelectedData')
     const binRoot = inject('binBreadcrumb')[0]
-    console.log("222222222", inject('binBreadcrumb'))
-    // const dataStore = useDataStore()
-    // const recycledData = toRef(props, 'recycledData')
-    // const recycledData = dataStore.getRecycledData()
 
     const moveBreadcrumb = inject('moveBreadcrumb') //移动文件时的目标文件夹路径
     const showOperationButton = ref(false)
     const visibleMoveFileTable = ref(false)
 
     const navigateTo = (index) => {
-      moveBreadcrumb.splice(0, moveBreadcrumb.length, ...moveBreadcrumb.slice(0, index + 1));
+      moveBreadcrumb.splice(0, moveBreadcrumb.length, ...moveBreadcrumb.slice(0, index + 1))
       // console.log("breadcrumb.value:", breadcrumb.value)
     }
 
     const getFolder = computed(() => {
-      return moveBreadcrumb[moveBreadcrumb.length - 1].children.filter(item =>
-        item.type === 'folder' && !topSelectedData.value.includes(item)
+      return moveBreadcrumb[moveBreadcrumb.length - 1].children.filter(
+        (item) => item.type === 'folder' && !topSelectedData.value.includes(item)
       )
     })
 
@@ -150,7 +151,7 @@ export default {
         })
         .then((response) => {
           const code = response.data.code
-          // 
+          //
           if (code == 1) {
             let result = response.data.data
             // console.log("result", result)
@@ -178,7 +179,7 @@ export default {
       let targetFolderNumbering = moveBreadcrumb[moveBreadcrumb.length - 1].numbering
       let folder_ids = []
       let attachment_ids = []
-      topSelectedData.value.forEach(item => {
+      topSelectedData.value.forEach((item) => {
         if (item.type == 'folder') {
           folder_ids.push(item.id)
         } else {
@@ -221,13 +222,20 @@ export default {
 
     //从原文件夹移除文件并添加至回收站
     const updateViewAfterDelete = async (response) => {
-      console.log('parent_folder.value', parent_folder.value)
-      parent_folder.value.children = parent_folder.value.children.filter(item => !props.selectedData.includes(item))
-      originData.attachments = originData.attachments.filter(item => !props.selectedData.includes(item))
-      originData.folders = originData.folders.filter(item => !props.selectedData.includes(item))
-      console.log('originData', originData)
-      console.log('parent_folder.value', parent_folder.value)
-      let need_to_add = processAddBinData(JSON.parse(JSON.stringify(topSelectedData.value)), response)
+      // console.log('parent_folder.value', parent_folder.value)
+      parent_folder.value.children = parent_folder.value.children.filter(
+        (item) => !props.selectedData.includes(item)
+      )
+      originData.attachments = originData.attachments.filter(
+        (item) => !props.selectedData.includes(item)
+      )
+      originData.folders = originData.folders.filter((item) => !props.selectedData.includes(item))
+      // console.log('originData', originData)
+      // console.log('parent_folder.value', parent_folder.value)
+      let need_to_add = processAddBinData(
+        JSON.parse(JSON.stringify(topSelectedData.value)),
+        response
+      )
       // console.log('need_to_add', need_to_add)
       binRoot.children.push(...need_to_add)
       // recycledData.value.folders.push(...need_to_add.folders)
@@ -238,27 +246,18 @@ export default {
 
     //从原文件夹移除文件并添加至新文件夹
     const updateViewAfterMove = () => {
-      console.log("topSelectedData.value", topSelectedData.value)
-      console.log("parent_folder.value", parent_folder.value)
-      parent_folder.value.children = parent_folder.value.children.filter(item => !topSelectedData.value.includes(item))
+      // console.log("topSelectedData.value", topSelectedData.value)
+      // console.log("parent_folder.value", parent_folder.value)
+      parent_folder.value.children = parent_folder.value.children.filter(
+        (item) => !topSelectedData.value.includes(item)
+      )
 
       let target_folder = moveBreadcrumb[moveBreadcrumb.length - 1]
-      console.log("target_folder", target_folder)
+      // console.log("target_folder", target_folder)
       target_folder.children.push(...topSelectedData.value)
     }
 
     watch(() => props.selectedData, changeOperationButton, { deep: true })
-    watch(
-      () => parent_folder,
-      () => {
-        console.log("parent_folder", parent_folder.value)
-        // parent_folder.value = props.parent_folder
-      },
-      { deep: true }
-    )
-    // watch(() => originData.folders, () => {
-    //   formData = processData(originData)
-    // }, { deep: true })
     return {
       breadcrumb: moveBreadcrumb,
       navigateTo,

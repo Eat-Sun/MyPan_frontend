@@ -30,8 +30,14 @@
       </el-form-item>
 
       <el-form-item style="display: flex; align-items: center">
-        <el-upload v-model:file-list="fileList" :auto-upload="false" :http-request="submitUpload"
-          :on-change="addTo_fileList" :on-remove="removeFrom_fileList" style="margin-top: 12px">
+        <el-upload
+          v-model:file-list="fileList"
+          :auto-upload="false"
+          :http-request="submitUpload"
+          :on-change="addTo_fileList"
+          :on-remove="removeFrom_fileList"
+          style="margin-top: 12px"
+        >
           <el-button type="primary">选择文件</el-button>
         </el-upload>
         <div style="flex: 1"></div>
@@ -100,10 +106,10 @@ export default {
             }
           },
           connected() {
-            console.log('WebSocket 连接成功')
+            // console.log('WebSocket 连接成功')
           },
           disconnected() {
-            console.log('WebSocket 断开连接')
+            // console.log('WebSocket 断开连接')
           }
         }
       )
@@ -250,7 +256,7 @@ export default {
         message: '正在获取下载连接...',
         type: 'warning',
         duration: 0
-      });
+      })
       apiClient
         .get('/api/v1/attachments/downloader', {
           params: {

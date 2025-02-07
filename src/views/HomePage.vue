@@ -5,7 +5,12 @@
       <AsideComp @viewControl="setView" :data="data" />
       <el-container>
         <Suspense>
-          <MainComp :upload_list="uploadList" :free_space="freeSpace" :operate_view="view" :form_data="formData" />
+          <MainComp
+            :upload_list="uploadList"
+            :free_space="freeSpace"
+            :operate_view="view"
+            :form_data="formData"
+          />
         </Suspense>
       </el-container>
     </el-container>
@@ -26,8 +31,8 @@ import { useDataStore } from '@/stores/data'
 let dataStore = useDataStore()
 onBeforeRouteLeave((to, from, next) => {
   dataStore.resetStore()
-  next();
-});
+  next()
+})
 
 const data = reactive({
   folders: [],
@@ -57,9 +62,8 @@ onBeforeMount(() => {
 
 const setView = (change) => {
   view.value = change
-  console.log('设置数据', view.value)
+  // console.log('设置数据', view.value)
 }
-
 </script>
 
 <style scoped>

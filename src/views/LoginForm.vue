@@ -16,19 +16,39 @@
 
   <el-dialog title="注册" v-model="visible" width="600px">
     <template #default>
-      <el-form :model="registerForm" :rules="registerFormRules">
-        <el-form-item label="用户名" :label-width="registerForm.formLabelWidth" prop="username">
+      <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules">
+        <el-form-item
+          label="用户名"
+          :label-width="registerForm.formLabelWidth"
+          prop="user.username"
+        >
           <el-input v-model="registerForm.user.username"></el-input>
         </el-form-item>
-        <el-form-item label="邮箱" :label-width="registerForm.formLabelWidth" prop="email">
+        <el-form-item label="邮箱" :label-width="registerForm.formLabelWidth" prop="user.email">
           <el-input v-model="registerForm.user.email" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="密码" :label-width="registerForm.formLabelWidth" prop="password">
-          <el-input type="password" v-model="registerForm.user.password" autocomplete="off" show-password />
+        <el-form-item label="密码" :label-width="registerForm.formLabelWidth" prop="user.password">
+          <el-input
+            type="password"
+            v-model="registerForm.user.password"
+            autocomplete="off"
+            show-password
+          />
         </el-form-item>
-        <el-form-item label="确认密码" :label-width="registerForm.formLabelWidth" prop="password_confirmation">
-          <el-input type="password" v-model="registerForm.user.password_confirmation" autocomplete="off"
-            show-password />
+        <el-form-item
+          label="确认密码"
+          :label-width="registerForm.formLabelWidth"
+          prop="user.password_confirmation"
+        >
+          <el-input
+            type="password"
+            v-model="registerForm.user.password_confirmation"
+            autocomplete="off"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="邀请码" :label-width="registerForm.formLabelWidth" prop="user.captcha">
+          <el-input v-model="registerForm.user.captcha" autocomplete="off" />
         </el-form-item>
       </el-form>
     </template>
@@ -40,14 +60,13 @@
       </span>
     </template>
   </el-dialog>
-
 </template>
 
 <script>
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { apiClient } from '@/utils';
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { apiClient } from '@/utils'
 
 export default {
   setup() {
@@ -66,97 +85,72 @@ export default {
         username: '',
         email: '',
         password: '',
-        password_confirmation: ''
+        password_confirmation: '',
+        captcha: ''
+      }
+    })
+    const registerFormRef = ref()
+
+    const registerRules = reactive({
+      user: {
+        username: [
+          { required: true, message: '用户名不能为空', trigger: 'blur' },
+          { min: 6, max: 10, message: '用户名长度为6~10位', trigger: 'blur' }
+        ],
+        email: [
+          { type: 'string', required: true, message: '请输入邮箱地址', trigger: 'blur' },
+          {
+            type: 'email',
+            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            message: '请输入正确的邮箱地址',
+            trigger: ['blur', 'change']
+          }
+        ],
+        password: [{ required: true, message: '密码不能为空', trigger: 'blur' }],
+        password_confirmation: [{ validator: passwordConfirmationRule, trigger: 'blur' }],
+        captcha: [{ required: true, message: '验证码不能为空', trigger: 'blur' }]
       }
     })
 
-    const username_rule = (rule, value, callback) => {
-      const { username } = registerForm.user;
-      console.log("username", username)
-      if (username == '') {
-        callback(new Error('用户名不能为空'))
-      } else {
-        if (username.length < 6 || username.length > 10) {
-          callback(new Error('用户名长度为6~10位'))
-        }
-      }
-
-    }
-
-    const email_rule = (rule, value, callback) => {
-      const { email } = registerForm.user;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (email == '') {
-        callback(new Error('邮箱不能为空'))
-      } else {
-        if (!emailRegex.test(email)) {
-          callback(new Error('邮箱格式不正确'))
-        }
-      }
-    }
-
-    const password_rule = (rule, value, callback) => {
-      const { password } = registerForm.user;
-      if (password == '') {
-        callback(new Error('请输入密码'));
-      } else {
-        callback();
-      }
-    }
-    const password_confirmation_rule = (rule, value, callback) => {
-      const { password, password_confirmation } = registerForm.user;
+    function passwordConfirmationRule(rule, value, callback) {
+      const { password, password_confirmation } = registerForm.user
       if (password_confirmation == '') {
-        callback(new Error('请再次输入密码'));
+        callback(new Error('请再次输入密码'))
       } else if (password_confirmation !== password) {
-        callback(new Error('两次输入密码不一致!'));
+        callback(new Error('两次输入密码不一致!'))
       } else {
-        callback();
+        callback()
       }
     }
 
-    const registerFormRules = reactive({
-      username: [
-        { validator: username_rule, trigger: 'blur' }
-      ],
-      email: [
-        { validator: email_rule, trigger: 'blur' }
-      ],
-      password: [
-        { validator: password_rule, trigger: 'blur' }
-      ],
-      password_confirmation: [
-        { validator: password_confirmation_rule, trigger: 'blur' }
-      ],
-    })
-
-
-    const router = useRouter();
+    const router = useRouter()
     const login = () => {
-      const { user } = loginForm;
+      const { user } = loginForm
       let messageInstance = ElMessage({
         message: '登陆中...',
         type: 'info',
         duration: 0
-      });
-      // 发送登录请求
-      apiClient.post('/api/v1/sessions/create', {
-        user: user,
-        token: localStorage.getItem('token')
       })
-        .then(response => {
+      // 发送登录请求
+      apiClient
+        .post('/api/v1/sessions/create', {
+          user: user,
+          token: localStorage.getItem('token')
+        })
+        .then((response) => {
           messageInstance.close()
-          const code = response.data.code;
+          const code = response.data.code
 
           if (code == 1) {
             const token = response.data.data.token
             const user_data = response.data.data.user_data
 
             localStorage.setItem('token', token)
-            sessionStorage.setItem('user_data', JSON.stringify(user_data));
+            sessionStorage.setItem('user_data', JSON.stringify(user_data))
             ElMessage({
               message: '登陆成功',
               type: 'success',
-              plain: true,
+              plain: true
             })
 
             router.push('/homepage')
@@ -166,29 +160,38 @@ export default {
             ElMessage({
               message: '登录失败: ' + message,
               type: 'error',
-              plain: true,
+              plain: true
             })
           }
-
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('发生错误：', error)
-        });
+        })
     }
 
     const register = () => {
+      registerFormRef.value.validate((valid) => {
+        if (!valid) {
+          ElMessage({
+            message: '验证未通过',
+            type: 'error',
+            plain: true
+          })
+          return
+        }
+      })
+
       const { user } = registerForm
-
-      console.log(user)
-
-      apiClient.post('/api/v1/users/create', { user })
-        .then(response => {
+      // console.log(user)
+      apiClient
+        .post('/api/v1/users/create', { user })
+        .then((response) => {
           const code = response.data.code
           if (code == 1) {
             ElMessage({
               message: '注册成功！',
               type: 'success',
-              plain: true,
+              plain: true
             })
 
             visible.value = false
@@ -197,13 +200,13 @@ export default {
             ElMessage({
               message: '注册失败: ' + message,
               type: 'error',
-              plain: true,
+              plain: true
             })
           }
         })
-        .catch(error => {
-          console.error('发生错误:', error);
-        });
+        .catch((error) => {
+          console.error('发生错误:', error)
+        })
     }
 
     return {
@@ -212,8 +215,8 @@ export default {
       register,
       registerForm,
       visible,
-      registerFormRules
-
+      registerRules,
+      registerFormRef
     }
   }
 }

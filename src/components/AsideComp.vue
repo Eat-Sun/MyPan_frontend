@@ -1,7 +1,12 @@
 <template>
-  <el-aside class="aside" style="width: 200px; overflow-x: hidden; padding-right: 0px;">
+  <el-aside class="aside" style="width: 200px; overflow-x: hidden; padding-right: 0px">
     <el-col :span="12" style="width: 200px">
-      <el-menu style="width: 200px" default-active="1-1" class="el-menu-vertical-demo" @select="selectedSubMenu">
+      <el-menu
+        style="width: 200px"
+        default-active="1-1"
+        class="el-menu-vertical-demo"
+        @select="selectedSubMenu"
+      >
         <el-sub-menu index="1">
           <template #title>
             <el-icon>
@@ -11,33 +16,33 @@
           </template>
           <el-menu-item index="1-1">
             <el-icon>
-              <Files />
-            </el-icon>全部文件
+              <Files /> </el-icon
+            >全部文件
           </el-menu-item>
           <el-menu-item index="1-2">
             <el-icon>
-              <Picture />
-            </el-icon>图片
+              <Picture /> </el-icon
+            >图片
           </el-menu-item>
           <el-menu-item index="1-3">
             <el-icon>
-              <Document />
-            </el-icon>文档
+              <Document /> </el-icon
+            >文档
           </el-menu-item>
           <el-menu-item index="1-4">
             <el-icon>
-              <VideoCamera />
-            </el-icon>视频
+              <VideoCamera /> </el-icon
+            >视频
           </el-menu-item>
           <el-menu-item index="1-5">
             <el-icon>
-              <Headset />
-            </el-icon>音频
+              <Headset /> </el-icon
+            >音频
           </el-menu-item>
           <el-menu-item index="1-6">
             <el-icon>
-              <More />
-            </el-icon>其它
+              <More /> </el-icon
+            >其它
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="2">
@@ -49,11 +54,11 @@
       </el-menu>
     </el-col>
   </el-aside>
-  <el-divider direction="vertical" style="height: 100%;padding-left: 0;"></el-divider>
+  <el-divider direction="vertical" style="height: 100%; padding-left: 0"></el-divider>
 </template>
 
 <script>
-import { useDataStore } from '@/stores/data';
+import { useDataStore } from '@/stores/data'
 import { inject, ref, toRef, watch } from 'vue'
 
 export default {
@@ -230,66 +235,24 @@ export default {
           break
         }
         case '2': {
-          // if (recycledData.folders.length === 0 || recycledData.attachments.length === 0) {
-          //   // 异步获取回收数据
-          //   let result = await getRecycledData()
-          //   recycledData.folders = result.folders
-          //   recycledData.attachments = result.attachments
-          //   console.log("触发")
-          // }
-          console.log('recycledData', recycledData)
           emit('viewControl', 'recycled')
           break
         }
       }
     }
-    // 获取回收数据
-    // const getRecycledData = async () => {
-    //   try {
-    //     const response = await apiClient.get('/api/v1/recycle_bins/getter', {
-    //       params: {
-    //         token: localStorage.getItem('token')
-    //       }
-    //     })
 
-    //     let code = response.data.code
-
-    //     if (code === 1) {
-    //       const processed = processData(response.data.data)
-    //       // 更新响应式数据
-    //       recycledData.value.splice(0, recycledData.value.length, ...processed) // 确保更新是响应式的
-    //     } else {
-    //       ElMessage({
-    //         message: '获取回收文件列表失败',
-    //         type: 'error',
-    //         plain: true
-    //       })
-    //     }
-    //   } catch (error) {
-    //     ElMessage({
-    //       message: '请求失败，请稍后重试',
-    //       type: 'error',
-    //       plain: true
-    //     })
-    //     console.error(error)
-    //   }
-    // }
-    // 处理回收数据排序
-    // const processData = (data) => {
-    //   if (data.length < 2) {
-    //     return data
-    //   }
-    //   return data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-    // }
     // 分类
     const getData = (type) => {
-      return data.value.attachments.filter(item => item.type == type)
+      return data.value.attachments.filter((item) => item.type == type)
     }
 
-    watch([type, data], () => {
-      // console.log("type",type.value)
-      classifyData.value = getData(type.value);
-    }, { deep: true });
+    watch(
+      [type, data],
+      () => {
+        classifyData.value = getData(type.value)
+      },
+      { deep: true }
+    )
 
     return {
       recycledData,

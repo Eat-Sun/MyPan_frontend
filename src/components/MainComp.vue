@@ -1,17 +1,33 @@
 <template>
   <el-main class="main">
-
     <div style="display: flex; flex-direction: row">
-      <UploadAndDownloadForm :parent_folder="parentFolder" :selectedData="selectedData" :consumer="consumer"
-        :free_space="freeSpace" />
+      <UploadAndDownloadForm
+        :parent_folder="parentFolder"
+        :selectedData="selectedData"
+        :consumer="consumer"
+        :free_space="freeSpace"
+      />
       <CreateFolder />
-      <OperateForm :parent_folder="parentFolder" :selectedData="selectedData" :topSelectedData="topSelectedData"
-        :free_space="freeSpace" :recycledData="recycledData" />
+      <OperateForm
+        :parent_folder="parentFolder"
+        :selectedData="selectedData"
+        :topSelectedData="topSelectedData"
+        :free_space="freeSpace"
+        :recycledData="recycledData"
+      />
       <ShareData :Data="formData" :selectedData="selectedData" :topSelectedData="topSelectedData" />
     </div>
     <keep-alive>
-      <FolderData v-if="view == 'living'" @selected="setSelectedData" @topSelection="setTopSelection" />
-      <ClassifyVeiw v-else-if="view == 'classify'" :selectedData="selectedData" @selected="setSelectedData">
+      <FolderData
+        v-if="view == 'living'"
+        @selected="setSelectedData"
+        @topSelection="setTopSelection"
+      />
+      <ClassifyVeiw
+        v-else-if="view == 'classify'"
+        :selectedData="selectedData"
+        @selected="setSelectedData"
+      >
       </ClassifyVeiw>
       <RecycleBin v-else-if="view == 'recycled'"></RecycleBin>
     </keep-alive>
@@ -29,7 +45,6 @@ import RecycleBin from './partial/RecycleBin.vue'
 import { provide, reactive, ref, toRef, watch } from 'vue'
 import { createConsumer } from '@rails/actioncable'
 import { useDataStore } from '@/stores/data'
-// import { processBinData } from '@/utils'
 
 const props = defineProps({
   operate_view: {
@@ -52,14 +67,13 @@ const props = defineProps({
 let dataStore = useDataStore()
 
 let recycledData = await dataStore.getRecycledData()
-console.log("recycledData", recycledData)
+// console.log("recycledData", recycledData)
 const view = toRef(props, 'operate_view')
 const consumer = createConsumer(import.meta.env.VITE_WEBSOCKET_URL)
 // const uploadList = toRef(props, 'upload_list')
 const freeSpace = toRef(props, 'free_space')
 
 let formData = props.form_data
-// let recycleFormData = computed(() => processBinData(recycledData))
 const breadcrumb = reactive([formData])
 const moveBreadcrumb = reactive([formData])
 const binBreadcrumb = reactive([{ id: null, name: 'root', children: recycledData }])
@@ -70,37 +84,43 @@ provide('breadcrumb', breadcrumb)
 provide('moveBreadcrumb', moveBreadcrumb)
 provide('binBreadcrumb', binBreadcrumb)
 provide('parentFolder', parentFolder)
-provide("binParentFolder", binParentFolder)
-// const currentData = computed(() => parentFolder.value.data)
+provide('binParentFolder', binParentFolder)
+
 const selectedData = ref([])
 const topSelectedData = ref([])
 
 const setSelectedData = (selected) => {
   selectedData.value = selected
-  console.log('selectedData.value:', selectedData.value)
+  // console.log('selectedData.value:', selectedData.value)
 }
 
 const setTopSelection = (topSelected) => {
   topSelectedData.value = topSelected
-  console.log('topSelectedData', topSelectedData.value)
+  // console.log('topSelectedData', topSelectedData.value)
 }
 
 watch(
   () => view,
   () => {
-    console.log('现在是：', view.value)
+    // console.log('现在是：', view.value)
   }
 )
-watch(breadcrumb, () => {
-  parentFolder.value = breadcrumb[breadcrumb.length - 1]
-  console.log("breadcrumb", breadcrumb)
-}, { immediate: true })
-watch(binBreadcrumb, () => {
-  binParentFolder.value = binBreadcrumb[binBreadcrumb.length - 1]
-  console.log("binBreadcrumb", binBreadcrumb)
-}, { immediate: true })
-// watch(() => recycledData, () => { console.log("recycledData改变了", recycledData) }, { deep: true })
-// watch(parentFolder, () => console.log("parentFolder改变了", parentFolder.value), { deep: true })
+watch(
+  breadcrumb,
+  () => {
+    parentFolder.value = breadcrumb[breadcrumb.length - 1]
+    // console.log("breadcrumb", breadcrumb)
+  },
+  { immediate: true }
+)
+watch(
+  binBreadcrumb,
+  () => {
+    binParentFolder.value = binBreadcrumb[binBreadcrumb.length - 1]
+    // console.log("binBreadcrumb", binBreadcrumb)
+  },
+  { immediate: true }
+)
 </script>
 <style>
 .main {
