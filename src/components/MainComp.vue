@@ -5,15 +5,15 @@
         :parent_folder="parentFolder"
         :selectedData="selectedData"
         :consumer="consumer"
-        :free_space="freeSpace"
+        v-model:free_space="freeSpace"
       />
       <CreateFolder />
       <OperateForm
         :parent_folder="parentFolder"
         :selectedData="selectedData"
         :topSelectedData="topSelectedData"
-        :free_space="freeSpace"
         :recycledData="recycledData"
+        v-model:free_space="freeSpace"
       />
       <ShareData :Data="formData" :selectedData="selectedData" :topSelectedData="topSelectedData" />
     </div>
@@ -29,7 +29,7 @@
         @selected="setSelectedData"
       >
       </ClassifyVeiw>
-      <RecycleBin v-else-if="view == 'recycled'"></RecycleBin>
+      <RecycleBin v-else-if="view == 'recycled'" v-model:free_space="freeSpace"></RecycleBin>
     </keep-alive>
   </el-main>
 </template>
@@ -55,14 +55,12 @@ const props = defineProps({
     type: Array,
     required: true
   },
-  free_space: {
-    required: true
-  },
   form_data: {
     type: Object,
     required: true
   }
 })
+const freeSpace = defineModel('free_space')
 
 let dataStore = useDataStore()
 
@@ -71,7 +69,6 @@ let recycledData = await dataStore.getRecycledData()
 const view = toRef(props, 'operate_view')
 const consumer = createConsumer(import.meta.env.VITE_WEBSOCKET_URL)
 // const uploadList = toRef(props, 'upload_list')
-const freeSpace = toRef(props, 'free_space')
 
 let formData = props.form_data
 const breadcrumb = reactive([formData])

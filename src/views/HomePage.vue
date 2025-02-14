@@ -7,9 +7,9 @@
         <Suspense>
           <MainComp
             :upload_list="uploadList"
-            :free_space="freeSpace"
             :operate_view="view"
             :form_data="formData"
+            v-model:free_space="freeSpace"
           />
         </Suspense>
       </el-container>

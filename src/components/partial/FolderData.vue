@@ -8,7 +8,12 @@
     </el-breadcrumb>
 
     <el-empty v-if="parentFolder.children.length == 0" description="暂无文件" />
-    <el-table v-else :data="parentFolder.children" @row-click="handleRowClick" @selection-change="selection">
+    <el-table
+      v-else
+      :data="parentFolder.children"
+      @row-click="handleRowClick"
+      @selection-change="selection"
+    >
       <el-table-column type="selection" width="55" />
       <el-table-column prop="name" label="Name" sortable>
         <template v-slot="scope">
@@ -25,27 +30,24 @@
             {{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'word'">
-            <el-icon style="margin-right: 15px">
-              <Document />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'video'">
-            <el-icon style="margin-right: 15px">
-              <VideoCamera />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else-if="scope.row.type == 'audio'">
-            <el-icon style="margin-right: 15px">
-              <Headset />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-else>
-            <el-icon style="margin-right: 15px">
-              <More />
-            </el-icon>{{ scope.row.name }}
+            <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
           </div>
           <div v-if="'editing' in scope.row && scope.row.editing" @click.stop>
-            <el-input v-model="scope.row.name" style="width: 120px; margin-right: 15px" placeholder="文件夹名称" clearable />
+            <el-input
+              v-model="scope.row.name"
+              style="width: 120px; margin-right: 15px"
+              placeholder="文件夹名称"
+              clearable
+            />
             <el-button type="danger" circle @click="parentFolder.children.splice(scope.$index, 1)">
               <el-icon>
                 <Delete />
@@ -87,7 +89,7 @@ const breadcrumb = inject('breadcrumb')
 const parentFolder = inject('parentFolder')
 
 const navigateTo = (index) => {
-  breadcrumb.splice(0, breadcrumb.length, ...breadcrumb.slice(0, index + 1));
+  breadcrumb.splice(0, breadcrumb.length, ...breadcrumb.slice(0, index + 1))
   // console.log('breadcrumb', breadcrumb.value)
   // console.log('currentFolder', currentFolder.value)
   // console.log('currentData', currentData.value)
@@ -135,7 +137,7 @@ const createFolder = (folder) => {
 }
 
 const selection = (selected) => {
-  // console.log("selected:", selected)
+  // console.log('selected:', selected)
   emit('selected', selected)
   emit(
     'topSelection',

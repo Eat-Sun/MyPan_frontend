@@ -32,24 +32,16 @@
           {{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'word'">
-          <el-icon style="margin-right: 15px">
-            <Document /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'video'">
-          <el-icon style="margin-right: 15px">
-            <VideoCamera /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'audio'">
-          <el-icon style="margin-right: 15px">
-            <Headset /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else>
-          <el-icon style="margin-right: 15px">
-            <More /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
         </div>
       </template>
     </el-table-column>
@@ -95,6 +87,8 @@
 import { apiClient, processRestoreData } from '@/utils'
 import { computed, inject, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+
+const freeSpace = defineModel('free_space')
 
 let originData = inject('originData')
 let root = inject('breadcrumb')[0]
@@ -184,6 +178,7 @@ function arrangeData(data, folders, attachments, bin_ids, root) {
         attachments.subs.push(attachment)
       }
 
+      freeSpace.value += item.byte_size
       attachments.ids.push(item.mix_id)
     }
     bin_ids.push(item.id)
