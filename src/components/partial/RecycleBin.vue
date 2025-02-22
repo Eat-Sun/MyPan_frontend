@@ -85,7 +85,7 @@
 
 <script setup>
 import { apiClient, processRestoreData } from '@/utils'
-import { computed, inject, nextTick, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
 const freeSpace = inject('freeSpace')
@@ -181,9 +181,7 @@ function arrangeData(data, folders, attachments, bin_ids, root, action) {
       }
 
       if (action === 'delete') {
-        console.log('freeSpace', freeSpace.value, typeof freeSpace.value)
         freeSpace.value = freeSpace.value + byte_size
-        console.log('freeSpace', freeSpace.value, typeof freeSpace.value)
       }
       attachments.ids.push(item.mix_id)
     }
@@ -205,7 +203,6 @@ function deleteData(data) {
 
   let result = init(selection.value, 'delete')
   let free_space = freeSpace.value
-  // console.log('free_space', free_space)
   apiClient
     .post('/api/v1/recycle_bins/deleter', {
       token: localStorage.getItem('token'),

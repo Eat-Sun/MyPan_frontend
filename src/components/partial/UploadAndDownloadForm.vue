@@ -243,18 +243,6 @@ const updateView = (file) => {
 
   parent_folder.value.children.push(file)
   originData.attachments.push(file)
-  // if (parent_folder.value.children.includes(file)) {
-  //   console.log('11111111111')
-  //   return
-  // } else {
-  //   console.log('222222222222')
-  //   let index = uploadList.value.findIndex((item) => item.b2_key === file.b2_key)
-
-  //   uploadList.value.splice(index, 1)
-
-  //   parent_folder.value.children.push(file)
-  //   originData.attachments.push(file)
-  // }
 }
 
 // 下载文件
@@ -276,7 +264,6 @@ const downloadFile = () => {
 
       if (code == 1) {
         let presigned_urls = response.data.data
-        console.log('presigned_urls', presigned_urls)
         presigned_urls.forEach((presigned_url) => {
           window.open(presigned_url, '_blank')
         })
@@ -295,7 +282,6 @@ const downloadFile = () => {
       }
     })
     .catch((error) => {
-      console.log(error)
       ElMessage({
         message: '错误:' + error,
         type: 'error',
