@@ -5,12 +5,7 @@
       <AsideComp @viewControl="setView" :data="data" />
       <el-container>
         <Suspense>
-          <MainComp
-            :upload_list="uploadList"
-            :operate_view="view"
-            :form_data="formData"
-            v-model:free_space="freeSpace"
-          />
+          <MainComp :upload_list="uploadList" :operate_view="view" :form_data="formData" />
         </Suspense>
       </el-container>
     </el-container>
@@ -45,6 +40,7 @@ const view = ref('living')
 
 const uploadList = ref([])
 
+provide('freeSpace', freeSpace)
 provide('originData', data)
 provide('classifyData', classifyData)
 provide('uploadList', uploadList)
@@ -54,7 +50,8 @@ onBeforeMount(() => {
   data.folders = user_data.form_data.folders
   data.attachments = user_data.form_data.attachments
   formData = processData(data)
-  freeSpace.value = user_data.free_space
+  freeSpace.value = Number(user_data.free_space)
+  // console.log('freeSpace.value', freeSpace.value)
   // console.log('data', data)
   // console.log('formData', formData.value)
   sessionStorage.removeItem('user_data')

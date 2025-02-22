@@ -29,9 +29,7 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="visibleSetShare = false">取消</el-button>
-        <el-button type="primary" @click="send">
-          确认
-        </el-button>
+        <el-button type="primary" @click="send"> 确认 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -48,9 +46,7 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="visible = false">取消</el-button>
-        <el-button type="primary" @click="getShareFrom">
-          获取文件
-        </el-button>
+        <el-button type="primary" @click="getShareFrom"> 获取文件 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -77,16 +73,15 @@
     <el-table :data="mySharedFile">
       <el-table-column prop="name" label="Name" sortable></el-table-column>
       <el-table-column prop="type" label="Type" sortable></el-table-column>
-      <el-table-column prop="size" label="ByteSize" sortable></el-table-column>
+      <el-table-column prop="byte_size" label="ByteSize" sortable></el-table-column>
     </el-table>
   </el-dialog>
-
 </template>
 
 <script>
-import { ref, reactive, watch, inject } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { apiClient } from '@/utils';
+import { ref, reactive, watch, inject } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { apiClient } from '@/utils'
 
 export default {
   name: 'ShareData',
@@ -134,28 +129,25 @@ export default {
     const send = () => {
       // console.log("shareList:", shareList.value)
       // console.log("top:", top.value)
-      apiClient.post('/api/v1/shares/new', {
-        token: token,
-        data: shareList.value,
-        top: top.value,
-        varify: setShare.varify
-      })
-        .then(response => {
-          const code = response.data.code;
+      apiClient
+        .post('/api/v1/shares/new', {
+          token: token,
+          data: shareList.value,
+          top: top.value,
+          varify: setShare.varify
+        })
+        .then((response) => {
+          const code = response.data.code
 
           if (code == 1) {
             let link = response.data.data.link
             let varify = response.data.data.varify
 
             visibleSetShare.value = false
-            ElMessageBox.confirm(
-              '链接：' + link + '\n提取码：' + varify,
-              '分享成功',
-              {
-                confirmButtonText: 'OK',
-                type: 'success',
-              }
-            )
+            ElMessageBox.confirm('链接：' + link + '\n提取码：' + varify, '分享成功', {
+              confirmButtonText: 'OK',
+              type: 'success'
+            })
           } else {
             const message = response.data.message
 
@@ -165,24 +157,24 @@ export default {
               plain: true
             })
           }
-
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('发生错误：', error)
-        });
+        })
     }
 
     // 获取共享
     const getShareFrom = () => {
-      apiClient.get('/api/v1/shares/getter', {
-        params: {
-          token: token,
-          link: getForm.link,
-          varify: getForm.varify
-        }
-      })
-        .then(response => {
-          const code = response.data.code;
+      apiClient
+        .get('/api/v1/shares/getter', {
+          params: {
+            token: token,
+            link: getForm.link,
+            varify: getForm.varify
+          }
+        })
+        .then((response) => {
+          const code = response.data.code
           if (code == 1) {
             const newData = response.data.data
             processData(newData)
@@ -191,7 +183,7 @@ export default {
             ElMessage({
               message: '获取成功',
               type: 'success',
-              plain: true,
+              plain: true
             })
             visibleGetForm.value = false
           } else {
@@ -199,13 +191,13 @@ export default {
             ElMessage({
               message: '获取失败: ' + message,
               type: 'error',
-              plain: true,
+              plain: true
             })
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('发生错误：', error)
-        });
+        })
     }
 
     const processData = (data) => {
@@ -218,8 +210,8 @@ export default {
       while (stack.length > 0) {
         let folder = stack.pop()
 
-        let subFolders = folders.filter(item => item.ancestry == folder.numbering)
-        let subAttachments = attachments.filter(item => item.folder_id == folder.id)
+        let subFolders = folders.filter((item) => item.ancestry == folder.numbering)
+        let subAttachments = attachments.filter((item) => item.folder_id == folder.id)
         folder.children.push(...subFolders)
         folder.children.push(...subAttachments)
 
@@ -228,13 +220,14 @@ export default {
     }
 
     const sharedFile = () => {
-      apiClient.get('/api/v1/shares/shared', {
-        params: {
-          token: token
-        }
-      })
-        .then(response => {
-          const code = response.data.code;
+      apiClient
+        .get('/api/v1/shares/shared', {
+          params: {
+            token: token
+          }
+        })
+        .then((response) => {
+          const code = response.data.code
           if (code == 1) {
             // console.log(response.data.data)
             visibleMySharedLinkTable.value = true
@@ -245,40 +238,43 @@ export default {
 
     // 取消分享
     const concelShare = (row) => {
-      apiClient.post("/api/v1/shares/concel", {
-        token: token,
-        link: row.link
-      }).then(response => {
-        const code = response.data.code;
-        const message = response.data.message
+      apiClient
+        .post('/api/v1/shares/concel', {
+          token: token,
+          link: row.link
+        })
+        .then((response) => {
+          const code = response.data.code
+          const message = response.data.message
 
-        if (code == 1) {
-          // console.log("row", row)
-          // console.log("myShareTable", myShareTable.value)
-          let index = myShareTable.value.findIndex(item => item == row)
-          myShareTable.value.splice(index, 1)
+          if (code == 1) {
+            // console.log("row", row)
+            // console.log("myShareTable", myShareTable.value)
+            let index = myShareTable.value.findIndex((item) => item == row)
+            myShareTable.value.splice(index, 1)
 
-          ElMessage({
-            message: message,
-            type: 'success',
-            plain: true,
-          })
-        } else if (code == -1) {
-          ElMessage({
-            message: message,
-            type: 'error',
-            plain: true,
-          })
-        } else {
-          ElMessage({
-            message: response.data.exception,
-            type: 'error',
-            plain: true,
-          })
-        }
-      }).catch(error => {
-        console.error('发生错误：', error)
-      });
+            ElMessage({
+              message: message,
+              type: 'success',
+              plain: true
+            })
+          } else if (code == -1) {
+            ElMessage({
+              message: message,
+              type: 'error',
+              plain: true
+            })
+          } else {
+            ElMessage({
+              message: response.data.exception,
+              type: 'error',
+              plain: true
+            })
+          }
+        })
+        .catch((error) => {
+          console.error('发生错误：', error)
+        })
     }
 
     const viewShared = (row) => {
@@ -291,8 +287,18 @@ export default {
       shareList.value = selectedData
     }
 
-    watch(() => props.selectedData, (newValue) => change_shareList(newValue), { deep: true })
-    watch(() => props.topSelectedData, () => { top.value = props.topSelectedData }, { deep: true });
+    watch(
+      () => props.selectedData,
+      (newValue) => change_shareList(newValue),
+      { deep: true }
+    )
+    watch(
+      () => props.topSelectedData,
+      () => {
+        top.value = props.topSelectedData
+      },
+      { deep: true }
+    )
 
     return {
       shareSelectedTo,

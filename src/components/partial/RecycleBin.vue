@@ -85,10 +85,10 @@
 
 <script setup>
 import { apiClient, processRestoreData } from '@/utils'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, nextTick, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 
-const freeSpace = defineModel('free_space')
+const freeSpace = inject('freeSpace')
 
 let originData = inject('originData')
 let root = inject('breadcrumb')[0]
@@ -125,7 +125,7 @@ function removeOperation() {
   hoveredRow.value = null
 }
 
-function init(data) {
+function init(data, action) {
   let bin_ids = []
   let folders = {
     ids: [],
@@ -138,12 +138,12 @@ function init(data) {
     subs: []
   }
   // console.log("data", data)
-  arrangeData(data, folders, attachments, bin_ids, root)
+  arrangeData(data, folders, attachments, bin_ids, root, action)
 
   return [folders, attachments, bin_ids]
 }
 
-function arrangeData(data, folders, attachments, bin_ids, root) {
+function arrangeData(data, folders, attachments, bin_ids, root, action) {
   data.forEach((item) => {
     if (item.type == 'folder') {
       let folder = {
@@ -163,12 +163,14 @@ function arrangeData(data, folders, attachments, bin_ids, root) {
 
       folders.ids.push(item.mix_id)
     } else {
+      let byte_size = Number(item.byte_size)
+
       let attachment = {
         id: item.mix_id,
         type: item.type,
         name: item.name,
         b2_key: item.b2_key,
-        byte_size: Number(item.byte_size)
+        byte_size: byte_size
       }
       if (topSelection.value.includes(item)) {
         attachment.folder_id = root.id
@@ -178,7 +180,11 @@ function arrangeData(data, folders, attachments, bin_ids, root) {
         attachments.subs.push(attachment)
       }
 
-      freeSpace.value += item.byte_size
+      if (action === 'delete') {
+        console.log('freeSpace', freeSpace.value, typeof freeSpace.value)
+        freeSpace.value = freeSpace.value + byte_size
+        console.log('freeSpace', freeSpace.value, typeof freeSpace.value)
+      }
       attachments.ids.push(item.mix_id)
     }
     bin_ids.push(item.id)
@@ -196,10 +202,14 @@ function deleteData(data) {
     })
     tableRef.value.toggleRowSelection(data, true)
   }
-  let result = init(selection.value)
-  // console.log('result', result)
+
+  let result = init(selection.value, 'delete')
+  let free_space = freeSpace.value
+  // console.log('free_space', free_space)
   apiClient
     .post('/api/v1/recycle_bins/deleter', {
+      token: localStorage.getItem('token'),
+      free_space: free_space,
       folder_ids: result[0].ids,
       attachment_ids: result[1].ids,
       bin_ids: result[2]
@@ -225,7 +235,7 @@ function restoreData(data) {
     tableRef.value.toggleRowSelection(data, true)
   }
 
-  let result = init(selection.value)
+  let result = init(selection.value, 'restore')
   let folders = {
     ids: result[0].ids,
     top_ids: result[0].tops.map((item) => item.id),

@@ -49,7 +49,7 @@
 
 <script setup>
 import { reactive, ref, onMounted, toRef, inject } from 'vue'
-import { throttle } from 'lodash'
+import { cloneDeep, throttle } from 'lodash'
 import { ElMessage } from 'element-plus'
 import { apiClient } from '@/utils'
 
@@ -66,7 +66,7 @@ const props = defineProps({
     required: true
   }
 })
-const freeSpace = defineModel('free_space')
+const freeSpace = inject('freeSpace')
 
 const parent_folder = toRef(props, 'parent_folder')
 const originData = inject('originData')
@@ -225,7 +225,6 @@ const submitUpload = async () => {
 
 // 实时更新上传进度
 const updateFileList = throttle((file) => {
-  // console.log("file", file)
   let index = uploadList.value.findIndex((item) => item.b2_key === file.b2_key)
 
   if (index > -1) {
@@ -238,12 +237,24 @@ const updateFileList = throttle((file) => {
 
 //更新视图
 const updateView = (file) => {
-  if (parent_folder.value.children.includes(file)) {
-    return
-  } else {
-    parent_folder.value.children.push(file)
-    originData.attachments.push(file)
-  }
+  let dup_file = cloneDeep(file)
+  dup_file.percentage = 100
+  updateFileList(dup_file)
+
+  parent_folder.value.children.push(file)
+  originData.attachments.push(file)
+  // if (parent_folder.value.children.includes(file)) {
+  //   console.log('11111111111')
+  //   return
+  // } else {
+  //   console.log('222222222222')
+  //   let index = uploadList.value.findIndex((item) => item.b2_key === file.b2_key)
+
+  //   uploadList.value.splice(index, 1)
+
+  //   parent_folder.value.children.push(file)
+  //   originData.attachments.push(file)
+  // }
 }
 
 // 下载文件
@@ -265,6 +276,7 @@ const downloadFile = () => {
 
       if (code == 1) {
         let presigned_urls = response.data.data
+        console.log('presigned_urls', presigned_urls)
         presigned_urls.forEach((presigned_url) => {
           window.open(presigned_url, '_blank')
         })

@@ -65,7 +65,7 @@
           <div v-if="scope.row.type != 'folder'">
             <div v-if="scope.row.byte_size < 1024">{{ scope.row.byte_size + 'Byte' }}</div>
             <div v-else-if="scope.row.byte_size > 1024 && scope.row.byte_size < 1048576">
-              {{ (scope.row.byte_size / 1024).toFixed(2) + 'KB' }}
+              {{ (scope.row.byte_size / 1024.0).toFixed(2) + 'KB' }}
             </div>
             <div v-else-if="scope.row.byte_size > 1048576 && scope.row.byte_size < 1073741824">
               {{ (scope.row.byte_size / 1048576.0).toFixed(2) + 'MB' }}

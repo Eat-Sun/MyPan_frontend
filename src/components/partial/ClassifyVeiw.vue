@@ -23,29 +23,21 @@
           {{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'word'">
-          <el-icon style="margin-right: 15px">
-            <Document /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <Document /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'video'">
-          <el-icon style="margin-right: 15px">
-            <VideoCamera /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <VideoCamera /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else-if="scope.row.type == 'audio'">
-          <el-icon style="margin-right: 15px">
-            <Headset /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <Headset /> </el-icon>{{ scope.row.name }}
         </div>
         <div v-else>
-          <el-icon style="margin-right: 15px">
-            <More /> </el-icon
-          >{{ scope.row.name }}
+          <el-icon style="margin-right: 15px"> <More /> </el-icon>{{ scope.row.name }}
         </div>
       </template>
     </el-table-column>
     <el-table-column prop="type" label="Type"></el-table-column>
-    <el-table-column prop="size" label="Size"></el-table-column>
+    <el-table-column prop="byte_size" label="Size"></el-table-column>
   </el-table>
 </template>
 

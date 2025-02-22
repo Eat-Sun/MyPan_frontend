@@ -5,7 +5,6 @@
         :parent_folder="parentFolder"
         :selectedData="selectedData"
         :consumer="consumer"
-        v-model:free_space="freeSpace"
       />
       <CreateFolder />
       <OperateForm
@@ -13,7 +12,6 @@
         :selectedData="selectedData"
         :topSelectedData="topSelectedData"
         :recycledData="recycledData"
-        v-model:free_space="freeSpace"
       />
       <ShareData :Data="formData" :selectedData="selectedData" :topSelectedData="topSelectedData" />
     </div>
@@ -29,7 +27,7 @@
         @selected="setSelectedData"
       >
       </ClassifyVeiw>
-      <RecycleBin v-else-if="view == 'recycled'" v-model:free_space="freeSpace"></RecycleBin>
+      <RecycleBin v-else-if="view == 'recycled'"></RecycleBin>
     </keep-alive>
   </el-main>
 </template>
@@ -42,7 +40,7 @@ import ShareData from './partial/ShareData.vue'
 import FolderData from './partial/FolderData.vue'
 import ClassifyVeiw from './partial/ClassifyVeiw.vue'
 import RecycleBin from './partial/RecycleBin.vue'
-import { provide, reactive, ref, toRef, watch } from 'vue'
+import { inject, provide, reactive, ref, toRef, watch } from 'vue'
 import { createConsumer } from '@rails/actioncable'
 import { useDataStore } from '@/stores/data'
 
@@ -60,7 +58,7 @@ const props = defineProps({
     required: true
   }
 })
-const freeSpace = defineModel('free_space')
+const freeSpace = inject('freeSpace')
 
 let dataStore = useDataStore()
 
@@ -102,6 +100,9 @@ watch(
     // console.log('现在是：', view.value)
   }
 )
+watch(freeSpace, () => {
+  console.log('watch freeSpace.value', freeSpace.value, typeof freeSpace.value)
+})
 watch(
   breadcrumb,
   () => {

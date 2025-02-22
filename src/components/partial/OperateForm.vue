@@ -67,11 +67,13 @@ const props = defineProps({
 })
 
 const originData = inject('originData') //原始数据
-const free_space = defineModel('free_space') //剩余空间
+const free_space = defineModel('freeSpace') //剩余空间
 const parent_folder = toRef(props, 'parent_folder') //欲操作文件原文件夹
 const selectedData = toRef(props, 'selectedData')
 const topSelectedData = toRef(props, 'topSelectedData')
 const binRoot = inject('binBreadcrumb')[0]
+
+console.log('free_space', free_space.value)
 
 const moveBreadcrumb = inject('moveBreadcrumb') //移动文件时的目标文件夹路径
 const showOperationButton = ref(false)
@@ -131,8 +133,6 @@ const deleteSelected = () => {
         is_top: false
       })
     }
-
-    free_space.value -= item.size
   })
   // console.log('folder_ids', folder_ids)
   // console.log('attachment_ids', attachment_ids)
