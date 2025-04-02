@@ -29,7 +29,7 @@
         </template>
       </el-form-item>
 
-      <el-form-item style="display: flex; align-items: center">
+      <el-form-item class="form_select">
         <el-upload
           v-model:file-list="fileList"
           :auto-upload="false"
@@ -302,3 +302,9 @@ const key_and_names = () => {
   return key_and_names
 }
 </script>
+<style>
+.form_select {
+  display: flex;
+  align-items: center;
+}
+</style>
