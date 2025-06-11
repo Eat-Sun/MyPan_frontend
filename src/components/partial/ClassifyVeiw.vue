@@ -37,7 +37,20 @@
       </template>
     </el-table-column>
     <el-table-column prop="type" label="Type"></el-table-column>
-    <el-table-column prop="byte_size" label="Size"></el-table-column>
+    <el-table-column prop="byte_size" label="Size">
+      <template v-slot="scope">
+        <div v-if="scope.row.type != 'folder'">
+          <div v-if="scope.row.byte_size < 1024">{{ scope.row.byte_size + 'Byte' }}</div>
+          <div v-else-if="scope.row.byte_size > 1024 && scope.row.byte_size < 1048576">
+            {{ (scope.row.byte_size / 1024.0).toFixed(2) + 'KB' }}
+          </div>
+          <div v-else-if="scope.row.byte_size > 1048576 && scope.row.byte_size < 1073741824">
+            {{ (scope.row.byte_size / 1048576.0).toFixed(2) + 'MB' }}
+          </div>
+          <div v-else>{{ (scope.row.byte_size / 1073741824.0).toFixed(2) + 'GB' }}</div>
+        </div>
+      </template>
+    </el-table-column>
   </el-table>
 </template>
 

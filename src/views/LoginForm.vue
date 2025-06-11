@@ -24,6 +24,19 @@
         >
           <el-input v-model="registerForm.user.username"></el-input>
         </el-form-item>
+        <el-form-item label="手机号" :label-width="registerForm.formLabelWidth" prop="user.phone">
+          <el-input v-model="registerForm.user.phone" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="验证码" :label-width="registerForm.formLabelWidth" prop="">
+          <template #default>
+            <el-input
+              style="width: 150px"
+              v-model="registerForm.user.verify_code"
+              autocomplete="off"
+            ></el-input>
+            <el-button @click="getVerifyCode">获取验证码</el-button>
+          </template>
+        </el-form-item>
         <el-form-item label="邮箱" :label-width="registerForm.formLabelWidth" prop="user.email">
           <el-input v-model="registerForm.user.email" autocomplete="off"></el-input>
         </el-form-item>
@@ -83,6 +96,8 @@ export default {
       formLabelWidth: '70px',
       user: {
         username: '',
+        phone: '',
+        verify_code: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -92,25 +107,38 @@ export default {
     const registerFormRef = ref()
 
     const registerRules = reactive({
-      user: {
-        username: [
-          { required: true, message: '用户名不能为空', trigger: 'blur' },
-          { min: 6, max: 10, message: '用户名长度为6~10位', trigger: 'blur' }
-        ],
-        email: [
-          { type: 'string', required: true, message: '请输入邮箱地址', trigger: 'blur' },
-          {
-            type: 'email',
-            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: '请输入正确的邮箱地址',
-            trigger: ['blur', 'change']
-          }
-        ],
-        password: [{ required: true, message: '密码不能为空', trigger: 'blur' }],
-        password_confirmation: [{ validator: passwordConfirmationRule, trigger: 'blur' }],
-        captcha: [{ required: true, message: '验证码不能为空', trigger: 'blur' }]
-      }
+      'user.username': [
+        { required: true, message: '用户名不能为空', trigger: 'blur' },
+        { min: 6, max: 10, message: '用户名长度为6~10位', trigger: 'blur' }
+      ],
+      'user.phone': [
+        { required: true, message: '请输入手机号', trigger: 'blur' },
+        { validator: phoneRule, trigger: ['blur', 'change'] }
+      ],
+      'user.email': [
+        { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+        {
+          type: 'email',
+          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          message: '请输入正确的邮箱地址',
+          trigger: ['blur', 'change']
+        }
+      ],
+      'user.password': [{ required: true, message: '密码不能为空', trigger: 'blur' }],
+      'user.password_confirmation': [{ validator: passwordConfirmationRule, trigger: 'blur' }],
+      'user.captcha': [{ required: true, message: '验证码不能为空', trigger: 'blur' }]
     })
+
+    function phoneRule(rule, value, callback) {
+      const phoneRegex = /^1[3-9]\d{9}$/
+      if (!value) {
+        callback(new Error('手机号不能为空'))
+      } else if (!phoneRegex.test(value)) {
+        callback(new Error('请输入正确的手机号'))
+      } else {
+        callback() // ✅ 验证通过时也必须调用 callback
+      }
+    }
 
     function passwordConfirmationRule(rule, value, callback) {
       const { password, password_confirmation } = registerForm.user
@@ -122,6 +150,10 @@ export default {
         callback()
       }
     }
+
+    // function captchaRule(rule, value, callback) {
+
+    // }
 
     const router = useRouter()
     const login = () => {
@@ -209,6 +241,41 @@ export default {
         })
     }
 
+    const getVerifyCode = async () => {
+      try {
+        // 校验手机号字段
+        await registerFormRef.value.validateField('user.phone')
+
+        // ✅ 校验通过，发送请求
+        const response = await apiClient.post('api/v1/users/verifycode', {
+          phone: registerForm.user.phone
+        })
+        const { code, data, message } = response.data
+        console.log(data)
+        if (code === 1) {
+          ElMessage({
+            message: '请注意查看短信验证码',
+            type: 'success',
+            plain: true
+          })
+        } else {
+          ElMessage({
+            message: '发送失败：' + message,
+            type: 'error',
+            plain: true
+          })
+        }
+      } catch (err) {
+        // ❌ 校验失败
+        ElMessage({
+          message: '请检查手机号',
+          type: 'error',
+          plain: true
+        })
+        console.warn('校验失败信息：', err)
+      }
+    }
+
     return {
       loginForm,
       login,
@@ -216,7 +283,8 @@ export default {
       registerForm,
       visible,
       registerRules,
-      registerFormRef
+      registerFormRef,
+      getVerifyCode
     }
   }
 }

@@ -137,7 +137,7 @@ const createFolder = (folder) => {
 }
 
 const selection = (selected) => {
-  // console.log('selected:', selected)
+  console.log('selected:', selected)
   emit('selected', selected)
   emit(
     'topSelection',
