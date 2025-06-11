@@ -15,34 +15,22 @@
             <span>我的文件</span>
           </template>
           <el-menu-item index="1-1">
-            <el-icon>
-              <Files /> </el-icon
-            >全部文件
+            <el-icon> <Files /> </el-icon>全部文件
           </el-menu-item>
           <el-menu-item index="1-2">
-            <el-icon>
-              <Picture /> </el-icon
-            >图片
+            <el-icon> <Picture /> </el-icon>图片
           </el-menu-item>
           <el-menu-item index="1-3">
-            <el-icon>
-              <Document /> </el-icon
-            >文档
+            <el-icon> <Document /> </el-icon>文档
           </el-menu-item>
           <el-menu-item index="1-4">
-            <el-icon>
-              <VideoCamera /> </el-icon
-            >视频
+            <el-icon> <VideoCamera /> </el-icon>视频
           </el-menu-item>
           <el-menu-item index="1-5">
-            <el-icon>
-              <Headset /> </el-icon
-            >音频
+            <el-icon> <Headset /> </el-icon>音频
           </el-menu-item>
           <el-menu-item index="1-6">
-            <el-icon>
-              <More /> </el-icon
-            >其它
+            <el-icon> <More /> </el-icon>其它
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="2">
@@ -250,6 +238,7 @@ export default {
       [type, data],
       () => {
         classifyData.value = getData(type.value)
+        console.log('监听触发')
       },
       { deep: true }
     )

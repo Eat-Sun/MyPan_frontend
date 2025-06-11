@@ -25,6 +25,7 @@
         v-else-if="view == 'classify'"
         :selectedData="selectedData"
         @selected="setSelectedData"
+        @topSelection="setTopSelection"
       >
       </ClassifyVeiw>
       <RecycleBin v-else-if="view == 'recycled'"></RecycleBin>
@@ -86,7 +87,7 @@ const topSelectedData = ref([])
 
 const setSelectedData = (selected) => {
   selectedData.value = selected
-  // console.log('selectedData.value:', selectedData.value)
+  console.log('selected:', selected)
 }
 
 const setTopSelection = (topSelected) => {
@@ -115,7 +116,7 @@ watch(
   binBreadcrumb,
   () => {
     binParentFolder.value = binBreadcrumb[binBreadcrumb.length - 1]
-    // console.log("binBreadcrumb", binBreadcrumb)
+    console.log('binBreadcrumb', binBreadcrumb)
   },
   { immediate: true }
 )

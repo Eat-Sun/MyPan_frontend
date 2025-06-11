@@ -108,12 +108,12 @@ const changeOperationButton = () => {
 
 // 删除文件
 const deleteSelected = () => {
-  console.log('selectedData', props.selectedData)
+  console.log('删除文件selectedData', selectedData)
   let folder_ids = []
   let attachment_ids = []
   let opt = []
 
-  props.selectedData.forEach((item) => {
+  selectedData.value.forEach((item) => {
     if (item.type == 'folder') {
       folder_ids.push(item.id)
     } else {
@@ -230,7 +230,7 @@ const updateViewAfterDelete = (response) => {
   // console.log('parent_folder.value', parent_folder.value)
 
   let need_to_add = processAddBinData(JSON.parse(JSON.stringify(topSelectedData.value)), response)
-  // console.log('need_to_add', need_to_add)
+  console.log('need_to_add', need_to_add)
   binRoot.children.push(...need_to_add)
   selectedData.value.length = 0
   console.log('selectedData.value', selectedData.value)
@@ -251,4 +251,14 @@ const updateViewAfterMove = () => {
 }
 
 watch(() => selectedData.value, changeOperationButton, { deep: true })
+// watch(
+//   () => topSelectedData.value,
+//   () => {
+//     console.log(
+//       'JSON.parse(JSON.stringify(topSelectedData.value)',
+//       JSON.parse(JSON.stringify(topSelectedData.value))
+//     )
+//   },
+//   { deep: true }
+// )
 </script>

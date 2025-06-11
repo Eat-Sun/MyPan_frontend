@@ -57,13 +57,14 @@
 <script setup>
 import { inject, ref } from 'vue'
 
-const emit = defineEmits(['selected'])
+const emit = defineEmits(['selected', 'topSelection'])
 const tableRef = ref()
 
 let classifyData = inject('classifyData')
 
 function setSelection() {
   emit('selected', tableRef.value.getSelectionRows())
-  // console.log('selection', selection)
+  emit('topSelection', tableRef.value.getSelectionRows())
+  // console.log('selection', tableRef.value.getSelectionRows())
 }
 </script>
